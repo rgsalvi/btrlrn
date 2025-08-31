@@ -641,7 +641,7 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             trouble = engine.recent_trouble_concepts(wa_id, user.get("subject"))
             raw_lesson = engine.ai_generate_lesson(
                 board=user.get("board"), grade=user.get("grade"), subject_label=user.get("subject"),
-                level=level, city=user.get("city"), state=user.get("state"), recent_mistakes=trouble
+                level=level, city=user.get("city"), state=user.get("state"), recent_mistakes=trouble, wa_id=wa_id
             )
             lesson = translate_lesson_if_needed(raw_lesson, lang)
             lesson_id = engine.save_lesson(

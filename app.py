@@ -22,6 +22,22 @@ _file.setFormatter(_formatter); _file.setLevel(logging.DEBUG); logger.addHandler
 _console = logging.StreamHandler(); _console.setFormatter(_formatter); _console.setLevel(logging.DEBUG); logger.addHandler(_console)
 
 # ==================== DB UTIL ====================
+def get_mastered_topics(wa_id, subject_label):
+    conn = db(); cur = conn.cursor()
+    cur.execute("SELECT title FROM lessons WHERE wa_id=? AND subject_label=?", (wa_id, subject_label))
+    lesson_titles = {r[0] for r in cur.fetchall()}
+    cur.execute("SELECT lesson_id, score, total FROM history WHERE wa_id=? AND subject=?", (wa_id, subject_label))
+    mastered = set()
+    for r in cur.fetchall():
+        if r[1] == 3 and r[2] == 3:
+            lid = r[0]
+            cur2 = conn.cursor()
+            cur2.execute("SELECT title FROM lessons WHERE id=?", (lid,))
+            row = cur2.fetchone()
+            if row and row[0]:
+                mastered.add(row[0])
+    conn.close()
+    return list(mastered)
 def db():
     conn = sqlite3.connect(DB_PATH, check_same_thread=False)
     conn.row_factory = sqlite3.Row
@@ -220,18 +236,22 @@ def extract_json(s: str) -> str:
     return m.group(1) if m else s
 
 @retry(stop=stop_after_attempt(2), wait=wait_exponential(multiplier=1, min=1, max=4))
-def ai_generate_lesson(board, grade, subject_label, level, city, state, recent_mistakes=None):
+def ai_generate_lesson(board, grade, subject_label, level, city, state, recent_mistakes=None, wa_id=None):
     start = time.monotonic()
     topic_hint = subject_to_topic_hint(subject_label)
     recent = ""
     if recent_mistakes:
         recent = f"\nCommon trouble areas to remediate: {', '.join(recent_mistakes[:4])}."
+    mastered_topics = get_mastered_topics(wa_id=wa_id, subject_label=subject_label) if subject_label and wa_id else []
+    exclude_str = ""
+    if mastered_topics:
+        exclude_str = f"\nDo NOT repeat any of these mastered topics (student scored 3/3): {', '.join(mastered_topics)}."
     prompt = (
         "You are an expert Indian school tutor who generates short daily lessons and 3 multiple-choice questions. "
         "Keep content aligned with Indian curricula (CBSE/ICSE/State), culturally neutral, and age-appropriate. "
         "Use simple, clear language.\n\n"
         f"Student profile: Board={board}, Grade={grade}, Subject={subject_label} (topic family={topic_hint}), "
-        f"City={city}, State={state}. Current Level={level}.{recent}\n"
+        f"City={city}, State={state}. Current Level={level}.{recent}{exclude_str}\n"
         "Create a tiny 'topic of the day' lesson that gets slightly more advanced with higher levels. "
         "THEN generate exactly 3 MCQs with options A-D, each with a short explanation for the correct answer.\n\n"
         f"{AI_JSON_SCHEMA}"

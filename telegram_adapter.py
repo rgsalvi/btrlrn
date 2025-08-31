@@ -442,13 +442,32 @@ async def admin_stats_handler(update, context):
     return
 
 async def help_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    wa_id = uid_from_tg(update)
-    lang = 'en'
-    sess = rowdict(engine.get_session(wa_id))
-    if sess and 'lang' in sess:
-        lang = sess['lang']
+    pass
+
+async def quiz_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     if update.message:
-        return await update.message.reply_text(t("HELP", lang))
+        update.message.text = "QUIZ"
+    return await text_handler(update, ctx)
+
+async def subject_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    if update.message:
+        update.message.text = "SUBJECT"
+    return await text_handler(update, ctx)
+
+async def profile_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    if update.message:
+        update.message.text = "PROFILE"
+    return await text_handler(update, ctx)
+
+async def stats_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    if update.message:
+        update.message.text = "STATS"
+    return await text_handler(update, ctx)
+
+async def reset_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    if update.message:
+        update.message.text = "RESET"
+    return await text_handler(update, ctx)
     return
 
 async def contact_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
@@ -1067,6 +1086,11 @@ if __name__ == "__main__":
     app.add_handler(CommandHandler("start", start_cmd))
     app.add_handler(CommandHandler("adminstats", admin_stats_handler))
     app.add_handler(CommandHandler("help", help_cmd))
+    app.add_handler(CommandHandler("quiz", quiz_cmd))
+    app.add_handler(CommandHandler("subject", subject_cmd))
+    app.add_handler(CommandHandler("profile", profile_cmd))
+    app.add_handler(CommandHandler("stats", stats_cmd))
+    app.add_handler(CommandHandler("reset", reset_cmd))
     app.add_handler(MessageHandler(filters.CONTACT, contact_handler))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_handler))
     app.add_handler(CallbackQueryHandler(on_button))

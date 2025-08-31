@@ -853,6 +853,7 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 # ---------- Launcher (Windows-friendly + tolerant HTTP client) ----------
 if __name__ == "__main__":
+
     if sys.platform.startswith("win"):
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
@@ -877,7 +878,6 @@ if __name__ == "__main__":
 
     print("🤖 Telegram bot is running… press Ctrl+C to stop.")
     app.run_polling()
-_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
     token = os.environ["TELEGRAM_BOT_TOKEN"].strip()
     # More forgiving HTTP client (fixes intermittent timeouts)

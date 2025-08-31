@@ -441,6 +441,16 @@ async def admin_stats_handler(update, context):
         )
     return
 
+async def help_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    wa_id = uid_from_tg(update)
+    lang = 'en'
+    sess = rowdict(engine.get_session(wa_id))
+    if sess and 'lang' in sess:
+        lang = sess['lang']
+    if update.message:
+        return await update.message.reply_text(t("HELP", lang))
+    return
+
 async def contact_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     wa_id = uid_from_tg(update)
     engine.upsert_user(wa_id, last_seen=_now_iso())
@@ -1056,6 +1066,7 @@ if __name__ == "__main__":
 
     app.add_handler(CommandHandler("start", start_cmd))
     app.add_handler(CommandHandler("adminstats", admin_stats_handler))
+    app.add_handler(CommandHandler("help", help_cmd))
     app.add_handler(MessageHandler(filters.CONTACT, contact_handler))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_handler))
     app.add_handler(CallbackQueryHandler(on_button))

@@ -377,13 +377,23 @@ def translate_lesson_if_needed(lesson: dict, lang: str) -> dict:
 
 # ---------- ID helpers ----------
 def uid_from_tg(update: Update) -> str:
-    return f"telegram:{update.effective_chat.id}"
+    if update and getattr(update, 'effective_chat', None) and getattr(update.effective_chat, 'id', None):
+        if update and getattr(update, 'effective_chat', None):
+            chat = update.effective_chat
+            if chat is not None and hasattr(chat, 'id') and chat.id is not None:
+                return f"telegram:{chat.id}"
+        return ""
+    return ""
 
 def step_header(lang: str, n: int, title_key: str) -> str:
     return f"{t('STEP', lang, n=n, title=t(title_key, lang))}"
 
 # ---------- Flow: senders ----------
 async def send_quiz_question(update_or_query, wa_id, lesson, q_index):
+    if not lesson or "questions" not in lesson or lesson["questions"] is None:
+        return
+    if q_index is None or q_index >= len(lesson["questions"]):
+        return
     q = lesson["questions"][q_index]
     textq = (
         f"{q['q']}\n"
@@ -392,10 +402,13 @@ async def send_quiz_question(update_or_query, wa_id, lesson, q_index):
         f"{q['options'][2]}\n"
         f"{q['options'][3]}"
     )
-    if isinstance(update_or_query, Update) and update_or_query.message:
-        return await update_or_query.message.reply_text(textq, reply_markup=kb_abcd())
-    if isinstance(update_or_query, Update) and update_or_query.callback_query:
-        return await update_or_query.callback_query.edit_message_text(textq, reply_markup=kb_abcd())
+    if isinstance(update_or_query, Update):
+        if update_or_query.message is not None:
+            return await update_or_query.message.reply_text(textq, reply_markup=kb_abcd())
+        if update_or_query.callback_query is not None:
+            return await update_or_query.callback_query.edit_message_text(textq, reply_markup=kb_abcd())
+    # fallback: do nothing if neither is available
+    return
 
 # ---------- Handlers ----------
 async def start_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
@@ -403,11 +416,14 @@ async def start_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     sess = rowdict(engine.get_session(wa_id))
     if not sess:
         engine.set_session(wa_id, "ask_lang")
-    await update.message.reply_text(f"{t('WELCOME','en')}\n\n{t('LANG_PROMPT','en')}", reply_markup=kb_lang())
+    if update.message is not None:
+        await update.message.reply_text(f"{t('WELCOME','en')}\n\n{t('LANG_PROMPT','en')}", reply_markup=kb_lang())
 
 async def admin_stats_handler(update, context):
     if not (update.effective_user and update.effective_user.id in ADMIN_IDS):
-        return await update.message.reply_text("Not authorized.")
+        if getattr(update, 'message', None):
+            return await update.message.reply_text("Not authorized.")
+        return
     import sqlite3
     conn = engine.db(); conn.row_factory = sqlite3.Row; cur = conn.cursor()
     cur.execute("SELECT COUNT(*) AS total FROM users WHERE wa_id LIKE 'telegram:%'")
@@ -419,9 +435,11 @@ async def admin_stats_handler(update, context):
     cur.execute("SELECT COUNT(*) AS wau FROM users WHERE wa_id LIKE 'telegram:%' AND last_seen >= date('now','-6 days')")
     wau = cur.fetchone()["wau"]
     conn.close()
-    return await update.message.reply_text(
-        f"👥 Total: {total}\n🟢 Online(10m): {online}\n📅 DAU: {dau}\n📈 WAU: {wau}"
-    )
+    if getattr(update, 'message', None):
+        return await update.message.reply_text(
+            f"👥 Total: {total}\n🟢 Online(10m): {online}\n📅 DAU: {dau}\n📈 WAU: {wau}"
+        )
+    return
 
 async def contact_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     wa_id = uid_from_tg(update)
@@ -433,18 +451,22 @@ async def contact_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     sess = rowdict(engine.get_session(wa_id))
     if not (sess and sess["stage"] == "ask_phone"):
         return
-    contact = update.message.contact
-    if not contact or not contact.phone_number:
+    contact = update.message.contact if update.message and getattr(update.message, 'contact', None) else None
+    if not contact or not getattr(contact, 'phone_number', None):
         return
     phone = clean_phone(contact.phone_number)
     if not valid_indian_mobile10(phone):
-        return await update.message.reply_text(t("PHONE_BAD", lang))
+        if update.message:
+            return await update.message.reply_text(t("PHONE_BAD", lang))
+        return
     engine.upsert_user(wa_id, phone=phone)
     engine.set_session(wa_id, "ask_city")
-    return await update.message.reply_text(
-        f"{step_header(lang, 5, 'CITY')}\n{t('ASK_CITY', lang)}",
-        reply_markup=None
-    )
+    if update.message:
+        return await update.message.reply_text(
+            f"{step_header(lang, 5, 'CITY')}\n{t('ASK_CITY', lang)}",
+            reply_markup=None
+        )
+    return
 
 def profile_missing_for_flow(u) -> bool:
     if not u: return True
@@ -497,32 +519,46 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
         if stage == "ask_lang":
             engine.set_session(wa_id, "ask_lang")
-            return await update.message.reply_text(f"{t('WELCOME','en')}\n\n{t('LANG_PROMPT','en')}", reply_markup=kb_lang())
+            if update.message:
+                return await update.message.reply_text(f"{t('WELCOME','en')}\n\n{t('LANG_PROMPT','en')}", reply_markup=kb_lang())
+            return
 
         if stage == "ask_first" or (user and not user.get("first_name")):
             if not text:
-                return await update.message.reply_text(f"{step_header(lang, 1, 'FIRST_NAME')}\n{t('ASK_FIRST', lang)}")
+                if update.message:
+                    return await update.message.reply_text(f"{step_header(lang, 1, 'FIRST_NAME')}\n{t('ASK_FIRST', lang)}")
+                return
             engine.upsert_user(wa_id, first_name=text)
             engine.set_session(wa_id, "ask_last")
-            return await update.message.reply_text(
-                f"{step_header(lang, 2, 'LAST_NAME')}\n{t('ASK_LAST', lang, first=text)}"
-            )
+            if update.message:
+                return await update.message.reply_text(
+                    f"{step_header(lang, 2, 'LAST_NAME')}\n{t('ASK_LAST', lang, first=text)}"
+                )
+            return
 
         if stage == "ask_last" or (user and not user.get("last_name")):
             if not text:
                 first = (user or {}).get("first_name","")
-                return await update.message.reply_text(f"{step_header(lang, 2, 'LAST_NAME')}\n{t('ASK_LAST', lang, first=first)}")
+                if update.message:
+                    return await update.message.reply_text(f"{step_header(lang, 2, 'LAST_NAME')}\n{t('ASK_LAST', lang, first=first)}")
+                return
             engine.upsert_user(wa_id, last_name=text)
             engine.set_session(wa_id, "ask_dob")
-            return await update.message.reply_text(f"{step_header(lang, 3, 'DOB')}\n{t('ASK_DOB', lang)}")
+            if update.message:
+                return await update.message.reply_text(f"{step_header(lang, 3, 'DOB')}\n{t('ASK_DOB', lang)}")
+            return
 
         if stage == "ask_dob" or (user and not user.get("dob")):
             if not text or not valid_dob(text):
-                return await update.message.reply_text(f"{step_header(lang, 3, 'DOB')}\n{t('DOB_BAD', lang)}")
+                if update.message:
+                    return await update.message.reply_text(f"{step_header(lang, 3, 'DOB')}\n{t('DOB_BAD', lang)}")
+                return
             engine.upsert_user(wa_id, dob=text)
             engine.set_session(wa_id, "ask_phone")
             kb = ReplyKeyboardMarkup([[KeyboardButton(t("PHONE_BTN", lang), request_contact=True)]], resize_keyboard=True, one_time_keyboard=True)
-            return await update.message.reply_text(f"{step_header(lang, 4, 'PHONE')}\n{t('ASK_PHONE', lang)}", reply_markup=kb)
+            if update.message:
+                return await update.message.reply_text(f"{step_header(lang, 4, 'PHONE')}\n{t('ASK_PHONE', lang)}", reply_markup=kb)
+            return
 
         if stage == "ask_phone" or (user and not user.get("phone")):
             digits = re.sub(r"\D","", text or "")
@@ -530,44 +566,60 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
                 digits = digits[2:]
             if not valid_indian_mobile10(digits):
                 kb = ReplyKeyboardMarkup([[KeyboardButton(t("PHONE_BTN", lang), request_contact=True)]], resize_keyboard=True, one_time_keyboard=True)
-                return await update.message.reply_text(t("PHONE_BAD", lang), reply_markup=kb)
+                if update.message:
+                    return await update.message.reply_text(t("PHONE_BAD", lang), reply_markup=kb)
+                return
             engine.upsert_user(wa_id, phone=digits)
             engine.set_session(wa_id, "ask_city")
-            return await update.message.reply_text(f"{step_header(lang, 5, 'CITY')}\n{t('ASK_CITY', lang)}", reply_markup=None)
+            if update.message:
+                return await update.message.reply_text(f"{step_header(lang, 5, 'CITY')}\n{t('ASK_CITY', lang)}", reply_markup=None)
+            return
 
         if stage == "ask_city" or (user and not user.get("city")):
             if not text:
-                return await update.message.reply_text(f"{step_header(lang, 5, 'CITY')}\n{t('ASK_CITY', lang)}")
+                if update.message:
+                    return await update.message.reply_text(f"{step_header(lang, 5, 'CITY')}\n{t('ASK_CITY', lang)}")
+                return
             engine.upsert_user(wa_id, city=text)
             engine.set_session(wa_id, "ask_board")
-            return await update.message.reply_text(
-                f"{step_header(lang, 6, 'BOARD')}\n{t('ASK_BOARD', lang)}",
-                reply_markup=kb_boards(lang)
-            )
+            if update.message:
+                return await update.message.reply_text(
+                    f"{step_header(lang, 6, 'BOARD')}\n{t('ASK_BOARD', lang)}",
+                    reply_markup=kb_boards(lang)
+                )
+            return
 
         if stage == "ask_board" or (user and not user.get("board")):
             choice = parse_board_choice(text)
             if not choice:
-                return await update.message.reply_text(t("INVALID_CHOICE", lang), reply_markup=kb_boards(lang))
+                if update.message:
+                    return await update.message.reply_text(t("INVALID_CHOICE", lang), reply_markup=kb_boards(lang))
+                return
             if choice in ("CBSE","ICSE"):
                 engine.upsert_user(wa_id, board=choice)
                 engine.set_session(wa_id, "ask_grade")
-                return await update.message.reply_text(f"{step_header(lang, 8, 'GRADE')}\n{t('ASK_GRADE', lang)}", reply_markup=kb_grades(lang))
+                if update.message:
+                    return await update.message.reply_text(f"{step_header(lang, 8, 'GRADE')}\n{t('ASK_GRADE', lang)}", reply_markup=kb_grades(lang))
+                return
             city = (rowdict(engine.get_user(wa_id)) or {}).get("city","")
             guessed = lookup_state_from_city(city)
             engine.upsert_user(wa_id, board="STATE")  # temporary until confirmation
             if guessed:
                 engine.set_session(wa_id, f"confirm_state:{guessed}")
-                return await update.message.reply_text(
-                    f"{step_header(lang, 7, 'BOARD')}\n{t('STATE_GUESS', lang, state=guessed)}",
-                    reply_markup=kb_yesno(lang),
-                )
+                if update.message:
+                    return await update.message.reply_text(
+                        f"{step_header(lang, 7, 'BOARD')}\n{t('STATE_GUESS', lang, state=guessed)}",
+                        reply_markup=kb_yesno(lang),
+                    )
+                return
             else:
                 engine.set_session(wa_id, "pick_state:0")
-                return await update.message.reply_text(
-                    f"{step_header(lang, 7, 'BOARD')}\n{t('PICK_STATE', lang)}",
-                    reply_markup=kb_states_page(lang, 0),
-                )
+                if update.message:
+                    return await update.message.reply_text(
+                        f"{step_header(lang, 7, 'BOARD')}\n{t('PICK_STATE', lang)}",
+                        reply_markup=kb_states_page(lang, 0),
+                    )
+                return
 
         if stage.startswith("confirm_state:"):
             guessed = stage.split(":",1)[1]
@@ -575,142 +627,263 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             if affirmative:
                 engine.upsert_user(wa_id, board=f"STATE: {guessed}", state=guessed)
                 engine.set_session(wa_id, "ask_grade")
-                return await update.message.reply_text(f"{step_header(lang, 8, 'GRADE')}\n{t('ASK_GRADE', lang)}", reply_markup=kb_grades(lang))
+                if update.message:
+                    return await update.message.reply_text(f"{step_header(lang, 8, 'GRADE')}\n{t('ASK_GRADE', lang)}", reply_markup=kb_grades(lang))
+                return
             engine.set_session(wa_id, "pick_state:0")
-            return await update.message.reply_text(f"{step_header(lang, 7, 'BOARD')}\n{t('PICK_STATE', lang)}", reply_markup=kb_states_page(lang, 0))
+            if update.message:
+                return await update.message.reply_text(f"{step_header(lang, 7, 'BOARD')}\n{t('PICK_STATE', lang)}", reply_markup=kb_states_page(lang, 0))
+            return
 
         if stage.startswith("pick_state:"):
             pick = best_match_state(text)
             if not pick:
-                return await update.message.reply_text(t("INVALID_CHOICE", lang), reply_markup=kb_states_page(lang, 0))
+                if update.message:
+                    return await update.message.reply_text(t("INVALID_CHOICE", lang), reply_markup=kb_states_page(lang, 0))
+                return
             engine.upsert_user(wa_id, board=f"STATE: {pick}", state=pick)
             engine.set_session(wa_id, "ask_grade")
-            return await update.message.reply_text(f"{step_header(lang, 8, 'GRADE')}\n{t('ASK_GRADE', lang)}", reply_markup=kb_grades(lang))
+            if update.message:
+                return await update.message.reply_text(f"{step_header(lang, 8, 'GRADE')}\n{t('ASK_GRADE', lang)}", reply_markup=kb_grades(lang))
+            return
 
         if stage == "ask_grade" or (user and not user.get("grade")):
             g = re.sub(r"\D","", text or "")
             if not g or not (6 <= int(g) <= 12):
-                return await update.message.reply_text(t("INVALID_CHOICE", lang), reply_markup=kb_grades(lang))
+                if update.message:
+                    return await update.message.reply_text(t("INVALID_CHOICE", lang), reply_markup=kb_grades(lang))
+                return
             engine.upsert_user(wa_id, grade=g, subject="Mathematics", level=1, streak=0)
             subs = subjects_for_user(wa_id)
             engine.set_session(wa_id, "choose_subject")
-            await update.message.reply_text(f"{t('PROFILE_SAVED', lang)}")
-            return await update.message.reply_text(
-                f"{step_header(lang, 9, 'SUBJECT')}\n{t('ASK_SUBJECT', lang)}",
-                reply_markup=kb_subjects(subs)
-            )
+            if update.message:
+                await update.message.reply_text(f"{t('PROFILE_SAVED', lang)}")
+                return await update.message.reply_text(
+                    f"{step_header(lang, 9, 'SUBJECT')}\n{t('ASK_SUBJECT', lang)}",
+                    reply_markup=kb_subjects(subs)
+                )
+            return
 
-        return await update.message.reply_text(t("FINISH_PROFILE", lang))
+        if update.message:
+            return await update.message.reply_text(t("FINISH_PROFILE", lang))
+        return
 
     # ---------- Commands (post-onboarding) ----------
-    up = (update.message.text or "").strip().upper()
+    up = ""
+    if update.message and getattr(update.message, 'text', None) and isinstance(update.message.text, str):
+        up = update.message.text.strip().upper()
 
     if up == "HELP":
-        return await update.message.reply_text(t("HELP", lang))
+        if update.message:
+            return await update.message.reply_text(t("HELP", lang))
+        return
 
     if up == "PROFILE":
         engine.set_session(wa_id, "profile_menu")
-        return await update.message.reply_text(t("PROFILE_CMD", lang))
+        if update.message:
+            return await update.message.reply_text(t("PROFILE_CMD", lang))
+        return
 
     if up == "RESET":
         engine.set_session(wa_id, "idle", 0, 0, None)
-        return await update.message.reply_text(t("RESET_OK", lang))
+        if update.message:
+            return await update.message.reply_text(t("RESET_OK", lang))
+        return
 
     if up == "RANK":
-        return await update.message.reply_text(t("RANK", lang))
+        if update.message:
+            return await update.message.reply_text(t("RANK", lang))
+        return
 
     if up == "STATS":
         conn = engine.db(); cur = conn.cursor()
         cur.execute("SELECT subject, level, score, total FROM history WHERE wa_id=? ORDER BY taken_at DESC LIMIT 5", (wa_id,))
         rows = cur.fetchall(); conn.close()
         if not rows:
-            return await update.message.reply_text(t("STATS_EMPTY", lang))
+            if update.message:
+                return await update.message.reply_text(t("STATS_EMPTY", lang))
+            return
         lines = [t("STATS_HEADER", lang)] + [f"- {r['subject']} L{r['level']}: {r['score']}/{r['total']}" for r in rows]
-        return await update.message.reply_text("\n".join(lines))
+        if update.message:
+            return await update.message.reply_text("\n".join(lines))
+        return
 
     if up == "SUBJECT":
         subs = subjects_for_user(wa_id)
         engine.set_session(wa_id, "choose_subject")
-        return await update.message.reply_text(t("ASK_SUBJECT", lang), reply_markup=kb_subjects(subs))
+        if update.message:
+            return await update.message.reply_text(t("ASK_SUBJECT", lang), reply_markup=kb_subjects(subs))
+        return
 
     if up == "START":
-        await update.message.reply_text(t("GENERATING", lang))
+        if update.message:
+            await update.message.reply_text(t("GENERATING", lang))
         try:
             user = rowdict(engine.get_user(wa_id))
-            level = user.get("level") or 1
-            trouble = engine.recent_trouble_concepts(wa_id, user.get("subject"))
+            level = user.get("level") if user and "level" in user else 1
+            trouble = engine.recent_trouble_concepts(wa_id, user.get("subject")) if user else None
             raw_lesson = engine.ai_generate_lesson(
-                board=user.get("board"), grade=user.get("grade"), subject_label=user.get("subject"),
-                level=level, city=user.get("city"), state=user.get("state"), recent_mistakes=trouble, wa_id=wa_id
-            )
-            lesson = translate_lesson_if_needed(raw_lesson, lang)
+                board=user.get("board") if user else None,
+                grade=user.get("grade") if user else None,
+                subject_label=user.get("subject") if user else None,
+                level=level,
+                city=user.get("city") if user else None,
+                state=user.get("state") if user else None,
+                recent_mistakes=trouble,
+                wa_id=wa_id
+            ) if user else None
+            lesson = translate_lesson_if_needed(raw_lesson, lang) if raw_lesson else None
             lesson_id = engine.save_lesson(
                 wa_id=wa_id,
-                board=user.get("board"), grade=user.get("grade"), subject_label=user.get("subject"),
-                level=level, title=lesson["title"], intro=lesson["intro"], questions=lesson["questions"]
-            )
+                board=user.get("board") if user else None,
+                grade=user.get("grade") if user else None,
+                subject_label=user.get("subject") if user else None,
+                level=level,
+                title=lesson["title"] if lesson else None,
+                intro=lesson["intro"] if lesson else None,
+                questions=lesson["questions"] if lesson else None
+            ) if lesson else None
             engine.set_session(wa_id, "lesson", 0, 0, lesson_id)
-            intro = "\n".join(lesson["intro"][:3])
-            return await update.message.reply_text(t("TOPIC", lang, title=lesson["title"], level=level, intro=intro), parse_mode="Markdown")
+            intro = "\n".join(lesson["intro"][:3]) if lesson and "intro" in lesson else ""
+            if update.message:
+                return await update.message.reply_text(t("TOPIC", lang, title=lesson["title"] if lesson else "", level=level, intro=intro), parse_mode="Markdown")
+            return
         except Exception as e:
             logger.error(f"[TG] AI generation error: {e}")
-            return await update.message.reply_text(t("AI_ERROR", lang))
+            if update.message:
+                return await update.message.reply_text(t("AI_ERROR", lang))
+            return
 
     if up == "QUIZ":
         sess = rowdict(engine.get_session(wa_id))
-        if not sess or not sess["lesson_id"]:
-            return await update.message.reply_text(t("NO_LESSON", lang))
+        if not sess or "lesson_id" not in sess or not sess["lesson_id"]:
+            if update.message:
+                return await update.message.reply_text(t("NO_LESSON", lang))
+            return
         lesson = engine.load_lesson(sess["lesson_id"])
-        idx = sess["q_index"]; qs = lesson["questions"]
+        idx = sess["q_index"] if sess and "q_index" in sess else 0
+        qs = lesson["questions"] if lesson and "questions" in lesson else []
         if idx >= len(qs):
-            return await update.message.reply_text(t("QUIZ_DONE", lang))
+            if update.message:
+                return await update.message.reply_text(t("QUIZ_DONE", lang))
+            return
         engine.update_session(wa_id, stage="quiz")
         return await send_quiz_question(update, wa_id, lesson, idx)
 
     # A/B/C/D via text
     if len(up) == 1 and up in "ABCD":
         sess = rowdict(engine.get_session(wa_id))
-        if sess and sess["stage"] == "choose_subject":
+        if sess and "stage" in sess and sess["stage"] == "choose_subject":
             subs = subjects_for_user(wa_id)
             i = ord(up) - ord('A')
             if 0 <= i < len(subs):
                 engine.upsert_user(wa_id, subject=subs[i], level=1)
                 engine.set_session(wa_id, "idle", 0, 0, None)
-                return await update.message.reply_text(t("SUBJECT_SET", lang, subject=subs[i]), parse_mode="Markdown")
-            return await update.message.reply_text(t("INVALID_CHOICE", lang))
-        if sess and sess["stage"] == "quiz":
+                kb_start = InlineKeyboardMarkup([[InlineKeyboardButton("START", callback_data="START")]])
+                if update.message:
+                    return await update.message.reply_text(
+                        f"Subject set to *{subs[i]}*. Tap START when you're ready to begin.",
+                        parse_mode="Markdown",
+                        reply_markup=kb_start
+                    )
+                return
+            if update.message:
+                return await update.message.reply_text(t("INVALID_CHOICE", lang))
+            return
+        if sess and "stage" in sess and sess["stage"] == "quiz":
             user = rowdict(engine.get_user(wa_id))
             reply = engine.process_ai_answer(user, sess, up)
-            if "🎉" in reply:
-                return await update.message.reply_text(reply)
-            # After feedback, prompt for next question
-            await update.message.reply_text(reply)
-            return await update.message.reply_text("Tap below for the next question:", reply_markup=kb_next_question())
-        return await update.message.reply_text(t("PLEASE_ABCD", lang))
+            if update.message:
+                if "🎉" in reply:
+                    return await update.message.reply_text(reply)
+                # After feedback, prompt for next question
+                await update.message.reply_text(reply)
+                return await update.message.reply_text("Tap below for the next question:", reply_markup=kb_next_question())
+            return
+        if update.message:
+            return await update.message.reply_text(t("PLEASE_ABCD", lang))
+        return
 
-    return await update.message.reply_text("👋")
+    if update.message:
+        return await update.message.reply_text("👋")
+    return
 
 async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    # Handle START button callback
+    if update and getattr(update, 'callback_query', None) and getattr(update.callback_query, 'data', None) == "START":
+        query = update.callback_query
+        wa_id = ""
+        if query and getattr(query, 'message', None):
+            chat_obj = getattr(query.message, 'chat', None)
+            if chat_obj and hasattr(chat_obj, 'id'):
+                wa_id = f"telegram:{chat_obj.id}"
+        lang = get_lang(wa_id)
+        user = rowdict(engine.get_user(wa_id))
+        if not user:
+            if query and getattr(query, 'edit_message_text', None):
+                return await query.edit_message_text("Profile not found. Please restart.")
+            return
+        level = user["level"] if user and "level" in user and user["level"] else 1
+        subject = user["subject"] if user and "subject" in user else None
+        trouble = engine.recent_trouble_concepts(wa_id, subject)
+        raw_lesson = engine.ai_generate_lesson(
+            board=user.get("board") if user else None,
+            grade=user.get("grade") if user else None,
+            subject_label=subject,
+            level=level,
+            city=user.get("city") if user else None,
+            state=user.get("state") if user else None,
+            recent_mistakes=trouble,
+            wa_id=wa_id
+        ) if subject else None
+        if not raw_lesson:
+            if query and getattr(query, 'edit_message_text', None):
+                return await query.edit_message_text("Could not generate lesson. Please try again.")
+            return
+        lesson = translate_lesson_if_needed(raw_lesson, lang) if raw_lesson else None
+        lesson_id = engine.save_lesson(
+            wa_id=wa_id,
+            board=user.get("board") if user else None,
+            grade=user.get("grade") if user else None,
+            subject_label=subject,
+            level=level,
+            title=lesson["title"] if lesson else None,
+            intro=lesson["intro"] if lesson else None,
+            questions=lesson["questions"] if lesson else None
+        ) if lesson else None
+        engine.set_session(wa_id, "lesson", 0, 0, lesson_id)
+        intro = "\n".join(lesson["intro"][:3]) if lesson and "intro" in lesson else ""
+        if query and getattr(query, 'edit_message_text', None):
+            return await query.edit_message_text(
+                t("TOPIC", lang, title=lesson["title"] if lesson else "", level=level, intro=intro),
+                parse_mode="Markdown"
+            )
+        return
     query = update.callback_query
     data = query.data if query and query.data else ""
     if query:
         await query.answer()
     
-    wa_id = f"telegram:{query.message.chat.id}" if query and query.message and query.message.chat else ""
+    wa_id = ""
+    if query and getattr(query, 'message', None):
+        chat_obj = getattr(query.message, 'chat', None)
+        if chat_obj and hasattr(chat_obj, 'id'):
+            wa_id = f"telegram:{chat_obj.id}"
     user = rowdict(engine.get_user(wa_id))
     sess = rowdict(engine.get_session(wa_id))
     lang = get_lang(wa_id)
 
     # Handle Next Question button
     if data == "NEXTQ":
-        if not sess or not sess["lesson_id"]:
-            if query:
+        if not sess or "lesson_id" not in sess or not sess["lesson_id"]:
+            if query and getattr(query, 'edit_message_text', None):
                 return await query.edit_message_text(t("NO_LESSON", lang))
             return
         lesson = engine.load_lesson(sess["lesson_id"])
-        idx = sess["q_index"]
-        if idx >= len(lesson["questions"]):
-            if query:
+        idx = sess["q_index"] if sess and "q_index" in sess else 0
+        qs = lesson["questions"] if lesson and "questions" in lesson else []
+        if idx >= len(qs):
+            if query and getattr(query, 'edit_message_text', None):
                 return await query.edit_message_text(t("QUIZ_DONE", lang))
             return
         return await send_quiz_question(update, wa_id, lesson, idx)
@@ -811,8 +984,13 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         engine.set_session(wa_id, "choose_subject")
         if query:
             await query.edit_message_text(t("PROFILE_SAVED", lang))
-            if query.message:
-                return await query.message.reply_text(f"{step_header(lang, 9, 'SUBJECT')}\n{t('ASK_SUBJECT', lang)}", reply_markup=kb_subjects(subs))
+            # Instead of reply_text, send a new message using bot context
+            if query.message and hasattr(ctx, 'bot'):
+                chat_id = query.message.chat.id if hasattr(query.message, 'chat') and hasattr(query.message.chat, 'id') else None
+                if chat_id:
+                    await ctx.bot.send_message(chat_id=chat_id,
+                        text=f"{step_header(lang, 9, 'SUBJECT')}\n{t('ASK_SUBJECT', lang)}",
+                        reply_markup=kb_subjects(subs))
             return
         return
 
@@ -844,8 +1022,14 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             if "🎉" in reply:
                 return await query.edit_message_text(reply)
             await query.edit_message_text(reply)
-            if query.message:
-                return await query.message.reply_text("Tap below for the next question:", reply_markup=kb_next_question())
+            # Instead of reply_text, send a new message using bot context
+            if query.message and hasattr(ctx, 'bot'):
+                chat_id = query.message.chat.id if hasattr(query.message, 'chat') and hasattr(query.message.chat, 'id') else None
+                if chat_id:
+                    await ctx.bot.send_message(chat_id=chat_id,
+                        text="Tap below for the next question:",
+                        reply_markup=kb_next_question())
+            return
         return
 
     if query:

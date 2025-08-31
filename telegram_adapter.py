@@ -832,21 +832,22 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         return
 
     # Answer buttons
-    if data.startswith("ANS:"):
-        choice = data.split(":",1)[1]
-        sess = rowdict(engine.get_session(wa_id))
-        if not (sess and sess["stage"] == "quiz"):
+        if data.startswith("ANS:"):
+            choice = data.split(":",1)[1]
+            sess = rowdict(engine.get_session(wa_id))
+            if not (sess and sess["stage"] == "quiz"):
+                if query:
+                    return await query.edit_message_text(t("SESSION_EXPIRED", lang))
+                return
+            reply = engine.process_ai_answer(user, sess, choice)
             if query:
-                return await query.edit_message_text(t("SESSION_EXPIRED", lang))
+                if "🎉" in reply:
+                    return await query.edit_message_text(reply)
+                # Show feedback and prompt for next question
+                await query.edit_message_text(reply)
+                if query.message:
+                    return await query.message.reply_text("Tap below for the next question:", reply_markup=kb_next_question())
             return
-        reply = engine.process_ai_answer(user, sess, choice)
-        if query:
-            if "🎉" in reply:
-                return await query.edit_message_text(reply)
-            await query.edit_message_text(reply)
-            if query.message:
-                return await query.message.reply_text("Tap below for the next question:", reply_markup=kb_next_question())
-        return
 
     if query:
         return await query.answer("OK")

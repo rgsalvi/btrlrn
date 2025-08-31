@@ -691,6 +691,8 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     return await update.message.reply_text("👋")
 
 async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    data = query.data if query and query.data else ""
     # Handle Next Question button
     if data == "NEXTQ":
         sess = rowdict(engine.get_session(wa_id))
@@ -705,8 +707,6 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
                 return await query.edit_message_text(t("QUIZ_DONE", lang))
             return
         return await send_quiz_question(update, wa_id, lesson, idx)
-    query = update.callback_query
-    data = query.data if query and query.data else ""
     if query:
         await query.answer()
     wa_id = f"telegram:{query.message.chat.id}" if query and query.message and query.message.chat else ""

@@ -554,11 +554,16 @@ def subjects_for_user(wa_id: str):
     board = (u["board"] if u and "board" in u and u["board"] else "")
     grade = str(u["grade"] if u and "grade" in u and u["grade"] else "")
     # Query subjects from syllabus table for this board and grade
-    conn = engine.db(); cur = conn.cursor()
-    cur.execute("SELECT DISTINCT subject FROM syllabus WHERE board=? AND grade=?", (board, grade))
-    subs = [r[0] for r in cur.fetchall()]
-    conn.close()
-    # Fallback to defaults if none found
+    subs = []
+    try:
+        conn = engine.db(); cur = conn.cursor()
+        cur.execute("SELECT DISTINCT subject FROM syllabus WHERE board=? AND grade=?", (board, grade))
+        subs = [r[0] for r in cur.fetchall()]
+        conn.close()
+    except Exception as e:
+        logger.error(f"[TG] subjects_for_user error: {e}")
+        subs = []
+    # Fallback to defaults if none found or error
     if not subs:
         subs = ["English","Mathematics","Science","Social Science"]
     return subs

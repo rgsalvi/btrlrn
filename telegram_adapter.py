@@ -843,9 +843,8 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             if "🎉" in reply:
                 return await query.edit_message_text(reply)
             await query.edit_message_text(reply)
-            lesson = engine.load_lesson(sess["lesson_id"])
-            idx = rowdict(engine.get_session(wa_id))["q_index"]
-            return await send_quiz_question(update, wa_id, lesson, idx)
+            if query.message:
+                return await query.message.reply_text("Tap below for the next question:", reply_markup=kb_next_question())
         return
 
     if query:

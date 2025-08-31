@@ -1,0 +1,57 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "telegram_adapter.py"
+      - "app.py"
+      - "requirements.txt"
+      - "migrate*.py"
+      - ".github/workflows/deploy.yml"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Copy files to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          source: "."
+          target: ${{ secrets.VPS_DIR }}
+          overwrite: true
+          rm: false
+          strip_components: 0
+          timeout: 120s
+          exclude: |
+            .git
+            .github
+            venv
+            logs
+            .env
+            mvp.db
+
+      - name: Install deps & restart bot
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          script: |
+            set -e
+            cd "${{ secrets.VPS_DIR }}"
+            VENVDIR="${{ secrets.VPS_DIR }}/venv/bin"
+            "$VENVDIR/pip" install --upgrade -r requirements.txt
+            [ -f migrate.py ] && "$VENVDIR/python" migrate.py || true
+            systemctl daemon-reload
+            systemctl restart btrlrn
+            systemctl --no-pager -l status btrlrn | sed -n '1,50p'

@@ -877,3 +877,26 @@ if __name__ == "__main__":
 
     print("🤖 Telegram bot is running… press Ctrl+C to stop.")
     app.run_polling()
+_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+    token = os.environ["TELEGRAM_BOT_TOKEN"].strip()
+    # More forgiving HTTP client (fixes intermittent timeouts)
+    req = HTTPXRequest(
+        connection_pool_size=20,
+        connect_timeout=20.0,
+        read_timeout=60.0,
+        write_timeout=20.0,
+        pool_timeout=20.0,
+        http_version="1.1",
+    )
+
+    app = Application.builder().token(token).request(req).build()
+
+    app.add_handler(CommandHandler("start", start_cmd))
+    app.add_handler(CommandHandler("adminstats", admin_stats_handler))
+    app.add_handler(MessageHandler(filters.CONTACT, contact_handler))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_handler))
+    app.add_handler(CallbackQueryHandler(on_button))
+
+    print("🤖 Telegram bot is running… press Ctrl+C to stop.")
+    app.run_polling()

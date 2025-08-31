@@ -1,0 +1,6 @@
+.env
+mvp.db
+venv/
+__pycache__/
+logs/
+*.bak

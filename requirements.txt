@@ -1,0 +1,7 @@
+flask
+twilio
+python-dotenv
+sqlite-utils
+openai>=1.0.0
+google-generativeai
+tenacity

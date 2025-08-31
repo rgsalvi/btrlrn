@@ -695,29 +695,36 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     if data == "NEXTQ":
         sess = rowdict(engine.get_session(wa_id))
         if not sess or not sess["lesson_id"]:
-            return await query.edit_message_text(t("NO_LESSON", lang))
+            if query:
+                return await query.edit_message_text(t("NO_LESSON", lang))
+            return
         lesson = engine.load_lesson(sess["lesson_id"])
         idx = sess["q_index"]
         if idx >= len(lesson["questions"]):
-            return await query.edit_message_text(t("QUIZ_DONE", lang))
+            if query:
+                return await query.edit_message_text(t("QUIZ_DONE", lang))
+            return
         return await send_quiz_question(update, wa_id, lesson, idx)
     query = update.callback_query
-    await query.answer()
+    data = query.data if query and query.data else ""
+    if query:
+        await query.answer()
     wa_id = f"telegram:{query.message.chat.id}" if query and query.message and query.message.chat else ""
     user = rowdict(engine.get_user(wa_id))
     sess = rowdict(engine.get_session(wa_id))
     lang = get_lang(wa_id)
-    data = query.data if query and query.data else ""
 
     # Language selection
     if data.startswith("LANG:"):
         lang_sel = data.split(":",1)[1]
         set_lang(wa_id, lang_sel)
         engine.set_session(wa_id, "ask_first")
-        return await query.edit_message_text(
-            f"{t('WELCOME', lang_sel)}\n\n{step_header(lang_sel, 1, 'FIRST_NAME')}\n{t('ASK_FIRST', lang_sel)}",
-            parse_mode="Markdown"
-        )
+        if query:
+            return await query.edit_message_text(
+                f"{t('WELCOME', lang_sel)}\n\n{step_header(lang_sel, 1, 'FIRST_NAME')}\n{t('ASK_FIRST', lang_sel)}",
+                parse_mode="Markdown"
+            )
+        return
 
     # Board selection
     if data.startswith("BOARD:"):
@@ -725,64 +732,88 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         if board in ("CBSE","ICSE"):
             engine.upsert_user(wa_id, board=board)
             engine.set_session(wa_id, "ask_grade")
-            return await query.edit_message_text(f"{step_header(lang, 8, 'GRADE')}\n{t('ASK_GRADE', lang)}", reply_markup=kb_grades(lang))
+            if query:
+                return await query.edit_message_text(f"{step_header(lang, 8, 'GRADE')}\n{t('ASK_GRADE', lang)}", reply_markup=kb_grades(lang))
+            return
         city = (rowdict(engine.get_user(wa_id)) or {}).get("city","")
         engine.upsert_user(wa_id, board="STATE")
         guessed = lookup_state_from_city(city) if city else None
         if guessed:
             engine.set_session(wa_id, f"confirm_state:{guessed}")
-            return await query.edit_message_text(
-                f"{step_header(lang, 7, 'BOARD')}\n{t('STATE_GUESS', lang, state=guessed)}",
-                reply_markup=kb_yesno(lang),
-                parse_mode="Markdown"
-            )
+            if query:
+                return await query.edit_message_text(
+                    f"{step_header(lang, 7, 'BOARD')}\n{t('STATE_GUESS', lang, state=guessed)}",
+                    reply_markup=kb_yesno(lang),
+                    parse_mode="Markdown"
+                )
+            return
         else:
             engine.set_session(wa_id, "pick_state:0")
-            return await query.edit_message_text(
-                f"{step_header(lang, 7, 'BOARD')}\n{t('PICK_STATE', lang)}",
-                reply_markup=kb_states_page(lang, 0)
-            )
+            if query:
+                return await query.edit_message_text(
+                    f"{step_header(lang, 7, 'BOARD')}\n{t('PICK_STATE', lang)}",
+                    reply_markup=kb_states_page(lang, 0)
+                )
+            return
 
     # Yes/No for state guess
     if data.startswith("YN:"):
         yn = data.split(":",1)[1]
         stage = sess["stage"] if sess else ""
         if not stage.startswith("confirm_state:"):
-            return await query.edit_message_text(t("SESSION_EXPIRED", lang))
+            if query:
+                return await query.edit_message_text(t("SESSION_EXPIRED", lang))
+            return
         guessed = stage.split(":",1)[1]
         if yn == "Y":
             engine.upsert_user(wa_id, board=f"STATE: {guessed}", state=guessed)
             engine.set_session(wa_id, "ask_grade")
-            return await query.edit_message_text(f"{step_header(lang, 8, 'GRADE')}\n{t('ASK_GRADE', lang)}", reply_markup=kb_grades(lang))
+            if query:
+                return await query.edit_message_text(f"{step_header(lang, 8, 'GRADE')}\n{t('ASK_GRADE', lang)}", reply_markup=kb_grades(lang))
+            return
         else:
             engine.set_session(wa_id, "pick_state:0")
-            return await query.edit_message_text(f"{step_header(lang, 7, 'BOARD')}\n{t('PICK_STATE', lang)}", reply_markup=kb_states_page(lang, 0))
+            if query:
+                return await query.edit_message_text(f"{step_header(lang, 7, 'BOARD')}\n{t('PICK_STATE', lang)}", reply_markup=kb_states_page(lang, 0))
+            return
 
     # State paging
     if data.startswith("PG:"):
         start = int(data.split(":",1)[1])
         engine.set_session(wa_id, f"pick_state:{start}")
-        return await query.edit_message_text(t("PICK_STATE", lang), reply_markup=kb_states_page(lang, start))
+        if query:
+            return await query.edit_message_text(t("PICK_STATE", lang), reply_markup=kb_states_page(lang, start))
+        return
 
     # Pick state
     if data.startswith("STATE:"):
         pick = data.split(":",1)[1]
         if pick not in IN_STATES:
-            return await query.answer(t("INVALID_CHOICE", lang), show_alert=True)
+            if query:
+                return await query.answer(t("INVALID_CHOICE", lang), show_alert=True)
+            return
         engine.upsert_user(wa_id, board=f"STATE: {pick}", state=pick)
         engine.set_session(wa_id, "ask_grade")
-        return await query.edit_message_text(f"{step_header(lang, 8, 'GRADE')}\n{t('ASK_GRADE', lang)}", reply_markup=kb_grades(lang))
+        if query:
+            return await query.edit_message_text(f"{step_header(lang, 8, 'GRADE')}\n{t('ASK_GRADE', lang)}", reply_markup=kb_grades(lang))
+        return
 
     # Grade pick
     if data.startswith("GRADE:"):
         g = data.split(":",1)[1]
         if not g.isdigit() or not (6 <= int(g) <= 12):
-            return await query.answer(t("INVALID_CHOICE", lang), show_alert=True)
+            if query:
+                return await query.answer(t("INVALID_CHOICE", lang), show_alert=True)
+            return
         engine.upsert_user(wa_id, grade=g, subject="Mathematics", level=1, streak=0)
         subs = subjects_for_user(wa_id)
         engine.set_session(wa_id, "choose_subject")
-        await query.edit_message_text(t("PROFILE_SAVED", lang))
-        return await query.message.reply_text(f"{step_header(lang, 9, 'SUBJECT')}\n{t('ASK_SUBJECT', lang)}", reply_markup=kb_subjects(subs))
+        if query:
+            await query.edit_message_text(t("PROFILE_SAVED", lang))
+            if query.message:
+                return await query.message.reply_text(f"{step_header(lang, 9, 'SUBJECT')}\n{t('ASK_SUBJECT', lang)}", reply_markup=kb_subjects(subs))
+            return
+        return
 
     # Subject pick
     if data.startswith("SUBJ:"):
@@ -792,24 +823,33 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             chosen = subs[i]
             engine.upsert_user(wa_id, subject=chosen, level=1)
             engine.set_session(wa_id, "idle", 0, 0, None)
-            return await query.edit_message_text(t("SUBJECT_SET", lang, subject=chosen), parse_mode="Markdown")
-        return await query.answer(t("INVALID_CHOICE", lang), show_alert=True)
+            if query:
+                return await query.edit_message_text(t("SUBJECT_SET", lang, subject=chosen), parse_mode="Markdown")
+            return
+        if query:
+            return await query.answer(t("INVALID_CHOICE", lang), show_alert=True)
+        return
 
     # Answer buttons
     if data.startswith("ANS:"):
         choice = data.split(":",1)[1]
         sess = rowdict(engine.get_session(wa_id))
         if not (sess and sess["stage"] == "quiz"):
-            return await query.edit_message_text(t("SESSION_EXPIRED", lang))
+            if query:
+                return await query.edit_message_text(t("SESSION_EXPIRED", lang))
+            return
         reply = engine.process_ai_answer(user, sess, choice)
-        if "🎉" in reply:
-            return await query.edit_message_text(reply)
-        lesson = engine.load_lesson(sess["lesson_id"])
-        idx = rowdict(engine.get_session(wa_id))["q_index"]
-        await query.edit_message_text(reply)
-        return await send_quiz_question(update, wa_id, lesson, idx)
+        if query:
+            if "🎉" in reply:
+                return await query.edit_message_text(reply)
+            await query.edit_message_text(reply)
+            lesson = engine.load_lesson(sess["lesson_id"])
+            idx = rowdict(engine.get_session(wa_id))["q_index"]
+            return await send_quiz_question(update, wa_id, lesson, idx)
+        return
 
-    return await query.answer("OK")
+    if query:
+        return await query.answer("OK")
 
 # ---------- Launcher (Windows-friendly + tolerant HTTP client) ----------
 if __name__ == "__main__":

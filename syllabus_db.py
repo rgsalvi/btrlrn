@@ -1,6 +1,6 @@
 # syllabus_db.py
 import sqlite3
-DB_PATH = 'syllabus.db'
+DB_PATH = 'mvp.db'
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)

@@ -8,6 +8,7 @@ import logging
 import requests
 from dotenv import load_dotenv
 import sqlite3
+from typing import Optional
 from telegram import (
     Update,
     InlineKeyboardMarkup,
@@ -453,29 +454,19 @@ async def help_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     return
 
 async def quiz_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    if update.message:
-        update.message.text = "QUIZ"
-    return await text_handler(update, ctx)
+    return await text_handler(update, ctx, forced_text="QUIZ")
 
 async def subject_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    if update.message:
-        update.message.text = "SUBJECT"
-    return await text_handler(update, ctx)
+    return await text_handler(update, ctx, forced_text="SUBJECT")
 
 async def profile_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    if update.message:
-        update.message.text = "PROFILE"
-    return await text_handler(update, ctx)
+    return await text_handler(update, ctx, forced_text="PROFILE")
 
 async def stats_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    if update.message:
-        update.message.text = "STATS"
-    return await text_handler(update, ctx)
+    return await text_handler(update, ctx, forced_text="STATS")
 
 async def reset_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    if update.message:
-        update.message.text = "RESET"
-    return await text_handler(update, ctx)
+    return await text_handler(update, ctx, forced_text="RESET")
     return
 
 async def contact_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
@@ -536,7 +527,7 @@ def subjects_for_user(wa_id: str):
     subs = engine.subjects_for(key, grade) or ["English","Mathematics","Science","Social Science"]
     return subs
 
-async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_text: Optional[str] = None):
     wa_id = uid_from_tg(update)
     engine.upsert_user(wa_id, last_seen=_now_iso())
     u = rowdict(engine.get_user(wa_id))
@@ -1100,7 +1091,8 @@ if __name__ == "__main__":
     app.add_handler(CommandHandler("stats", stats_cmd))
     app.add_handler(CommandHandler("reset", reset_cmd))
     app.add_handler(MessageHandler(filters.CONTACT, contact_handler))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_handler))
+    from functools import partial
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, lambda update, ctx: text_handler(update, ctx)))
     app.add_handler(CallbackQueryHandler(on_button))
 
     print("🤖 Telegram bot is running… press Ctrl+C to stop.")

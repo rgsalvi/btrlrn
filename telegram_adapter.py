@@ -1199,6 +1199,53 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         if query:
             return await query.answer(t("INVALID_CHOICE", lang), show_alert=True)
         return
+    
+    # Topic pick
+    if data.startswith("TOPIC:"):
+        j = int(data.split(":",1)[1])
+        user = rowdict(engine.get_user(wa_id))
+        board = user.get("board") if user else None
+        grade = user.get("grade") if user else None
+        subject = user.get("subject") if user else None
+        topics = topics_for_user(wa_id, board, grade, subject)
+        if 0 <= j < len(topics):
+            chosen_topic = topics[j]
+            engine.upsert_user(wa_id, topic=chosen_topic)
+            # Generate lesson for this topic
+            level = user.get("level") if user and "level" in user else 1
+            trouble = engine.recent_trouble_concepts(wa_id, subject) if user else None
+            raw_lesson = engine.ai_generate_lesson(
+                board=board,
+                grade=grade,
+                subject_label=subject,
+                level=level,
+                city=user.get("city") if user else None,
+                state=user.get("state") if user else None,
+                recent_mistakes=trouble,
+                wa_id=wa_id
+            ) if user else None
+            lesson = translate_lesson_if_needed(raw_lesson, lang) if raw_lesson else None
+            lesson_id = engine.save_lesson(
+                wa_id=wa_id,
+                board=board,
+                grade=grade,
+                subject_label=subject,
+                level=level,
+                title=lesson["title"] if lesson else None,
+                intro=lesson["intro"] if lesson else None,
+                questions=lesson["questions"] if lesson else None
+            ) if lesson else None
+            engine.set_session(wa_id, "lesson", 0, 0, lesson_id)
+            intro = "\n".join(lesson["intro"][:3]) if lesson and "intro" in lesson else ""
+            if query:
+                return await query.edit_message_text(
+                    t("TOPIC", lang, title=lesson["title"] if lesson else "", level=level, intro=intro),
+                    parse_mode="Markdown"
+                )
+            return
+        if query:
+            return await query.answer(t("INVALID_CHOICE", lang), show_alert=True)
+        return
 
     # Answer buttons
     if data.startswith("ANS:"):

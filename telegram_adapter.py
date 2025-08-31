@@ -303,6 +303,11 @@ def kb_abcd():
         [InlineKeyboardButton("C", callback_data="ANS:C"), InlineKeyboardButton("D", callback_data="ANS:D")],
     ])
 
+def kb_next_question():
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("Next Question", callback_data="NEXTQ")]
+    ])
+
 # ---------- Validation ----------
 DOB_RE = re.compile(r"^(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[0-2])-(20\d{2}|19\d{2})$")
 def valid_dob(ddmmyyyy: str) -> bool:
@@ -678,15 +683,24 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             reply = engine.process_ai_answer(user, sess, up)
             if "🎉" in reply:
                 return await update.message.reply_text(reply)
-            lesson = engine.load_lesson(sess["lesson_id"])
-            idx = rowdict(engine.get_session(wa_id))["q_index"]
+            # After feedback, prompt for next question
             await update.message.reply_text(reply)
-            return await send_quiz_question(update, wa_id, lesson, idx)
+            return await update.message.reply_text("Tap below for the next question:", reply_markup=kb_next_question())
         return await update.message.reply_text(t("PLEASE_ABCD", lang))
 
     return await update.message.reply_text("👋")
 
 async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    # Handle Next Question button
+    if data == "NEXTQ":
+        sess = rowdict(engine.get_session(wa_id))
+        if not sess or not sess["lesson_id"]:
+            return await query.edit_message_text(t("NO_LESSON", lang))
+        lesson = engine.load_lesson(sess["lesson_id"])
+        idx = sess["q_index"]
+        if idx >= len(lesson["questions"]):
+            return await query.edit_message_text(t("QUIZ_DONE", lang))
+        return await send_quiz_question(update, wa_id, lesson, idx)
     query = update.callback_query
     await query.answer()
     wa_id = f"telegram:{query.message.chat.id}"

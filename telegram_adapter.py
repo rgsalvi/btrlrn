@@ -442,7 +442,15 @@ async def admin_stats_handler(update, context):
     return
 
 async def help_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    pass
+
+    wa_id = uid_from_tg(update)
+    lang = 'en'
+    sess = rowdict(engine.get_session(wa_id))
+    if sess and 'lang' in sess:
+        lang = sess['lang']
+    if update.message:
+        return await update.message.reply_text(t("HELP", lang))
+    return
 
 async def quiz_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     if update.message:

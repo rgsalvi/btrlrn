@@ -36,6 +36,36 @@ import app as engine  # uses your DB, AI, helpers, logger
 _engine_flask_app = engine.create_app()  # initializes DB, Gemini, logger, etc.
 logger = engine.logger  # reuse same logger
 
+# ---------- Add mastered_topics table if not exists ----------
+def ensure_mastered_topics_table():
+    conn = engine.db(); cur = conn.cursor()
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS mastered_topics (
+            wa_id TEXT,
+            board TEXT,
+            grade INTEGER,
+            subject TEXT,
+            topic TEXT,
+            mastered_at TEXT,
+            PRIMARY KEY (wa_id, board, grade, subject, topic)
+        )
+    ''')
+    conn.commit(); conn.close()
+ensure_mastered_topics_table()
+
+# Helper: get mastered topics for user
+def get_mastered_topics(wa_id, board, grade, subject):
+    conn = engine.db(); cur = conn.cursor()
+    cur.execute("SELECT topic FROM mastered_topics WHERE wa_id=? AND board=? AND grade=? AND subject=?", (wa_id, board, grade, subject))
+    rows = cur.fetchall(); conn.close()
+    return set(r[0] for r in rows)
+
+# Helper: mark topic as mastered
+def mark_topic_mastered(wa_id, board, grade, subject, topic):
+    conn = engine.db(); cur = conn.cursor()
+    cur.execute("INSERT OR IGNORE INTO mastered_topics (wa_id, board, grade, subject, topic, mastered_at) VALUES (?, ?, ?, ?, ?, datetime('now'))", (wa_id, board, grade, subject, topic))
+    conn.commit(); conn.close()
+
 load_dotenv()
 
 # ---------- Small helpers ----------
@@ -526,6 +556,16 @@ def subjects_for_user(wa_id: str):
     key = "STATE" if board.startswith("STATE:") else board
     subs = engine.subjects_for(key, grade) or ["English","Mathematics","Science","Social Science"]
     return subs
+
+# Helper: get topics for subject/grade/board, excluding mastered
+def topics_for_user(wa_id, board, grade, subject):
+    # Get all topics from syllabus_db
+    conn = engine.db(); cur = conn.cursor()
+    cur.execute("SELECT topic FROM syllabus WHERE board=? AND grade=? AND subject=?", (board, grade, subject))
+    all_topics = [r[0] for r in cur.fetchall()]
+    conn.close()
+    mastered = get_mastered_topics(wa_id, board, grade, subject)
+    return [t for t in all_topics if t not in mastered]
 
 async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_text: Optional[str] = None):
     wa_id = uid_from_tg(update)

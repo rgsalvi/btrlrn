@@ -713,8 +713,20 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_te
 
     if up == "PROFILE":
         engine.set_session(wa_id, "profile_menu")
+        u = rowdict(engine.get_user(wa_id))
+        profile_lines = []
+        if u:
+            profile_lines.append("Your current profile:")
+            profile_lines.append(f"A) Name: {u.get('first_name','')} {u.get('last_name','')}")
+            profile_lines.append(f"B) City: {u.get('city','')}")
+            profile_lines.append(f"C) State/Curriculum: {u.get('state','') or u.get('board','')}")
+            profile_lines.append(f"D) Grade: {u.get('grade','')}")
+            profile_lines.append(f"E) Subject: {u.get('subject','')}")
+            profile_lines.append("")
+        profile_lines.append(t("PROFILE_CMD", lang))
+        msg = "\n".join(profile_lines)
         if update.message:
-            return await update.message.reply_text(t("PROFILE_CMD", lang))
+            return await update.message.reply_text(msg)
         return
 
     if up == "RESET":
@@ -803,9 +815,54 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_te
         engine.update_session(wa_id, stage="quiz")
         return await send_quiz_question(update, wa_id, lesson, idx)
 
-    # A/B/C/D via text
-    if len(up) == 1 and up in "ABCD":
+    # A/B/C/D/E via text for subject/quiz/profile
+    if len(up) == 1 and up in "ABCDE":
         sess = rowdict(engine.get_session(wa_id))
+        # Profile editing menu
+        if sess and "stage" in sess and sess["stage"] == "profile_menu":
+            # Map A-E to profile fields
+            field_map = {
+                "A": ("first_name", "Please enter your first name:"),
+                "B": ("city", "Please enter your city:"),
+                "C": ("state", "Please enter your state/curriculum (e.g., Maharashtra, CBSE, ICSE):"),
+                "D": ("grade", "Please enter your grade (6-12):"),
+                "E": ("subject", "Please enter your subject (e.g., Mathematics, Science):"),
+            }
+            if up in field_map:
+                field, prompt = field_map[up]
+                engine.set_session(wa_id, f"edit_{field}")
+                if update.message:
+                    return await update.message.reply_text(prompt)
+                return
+            if update.message:
+                return await update.message.reply_text(t("INVALID_CHOICE", lang))
+            return
+        # Handle editing each field
+        if sess and "stage" in sess and sess["stage"].startswith("edit_"):
+            field = sess["stage"].replace("edit_", "")
+            value = text
+            # Validate grade
+            if field == "grade":
+                g = re.sub(r"\D", "", value)
+                if not g or not (6 <= int(g) <= 12):
+                    if update.message:
+                        return await update.message.reply_text("Invalid grade. Please enter a number between 6 and 12.")
+                    return
+                value = g
+            # Validate subject
+            if field == "subject":
+                subs = subjects_for_user(wa_id)
+                if value not in subs:
+                    if update.message:
+                        return await update.message.reply_text(f"Invalid subject. Please pick one of: {', '.join(subs)}")
+                    return
+            # Update user profile
+            engine.upsert_user(wa_id, **{field: value})
+            engine.set_session(wa_id, "idle", 0, 0, None)
+            if update.message:
+                return await update.message.reply_text(t("PROFILE_UPDATED", lang))
+            return
+        # Subject selection menu
         if sess and "stage" in sess and sess["stage"] == "choose_subject":
             subs = subjects_for_user(wa_id)
             i = ord(up) - ord('A')
@@ -823,6 +880,7 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_te
             if update.message:
                 return await update.message.reply_text(t("INVALID_CHOICE", lang))
             return
+        # Quiz answer
         if sess and "stage" in sess and sess["stage"] == "quiz":
             user = rowdict(engine.get_user(wa_id))
             reply = engine.process_ai_answer(user, sess, up)

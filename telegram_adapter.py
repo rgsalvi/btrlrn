@@ -693,9 +693,16 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     data = query.data if query and query.data else ""
+    if query:
+        await query.answer()
+    
+    wa_id = f"telegram:{query.message.chat.id}" if query and query.message and query.message.chat else ""
+    user = rowdict(engine.get_user(wa_id))
+    sess = rowdict(engine.get_session(wa_id))
+    lang = get_lang(wa_id)
+
     # Handle Next Question button
     if data == "NEXTQ":
-        sess = rowdict(engine.get_session(wa_id))
         if not sess or not sess["lesson_id"]:
             if query:
                 return await query.edit_message_text(t("NO_LESSON", lang))
@@ -707,12 +714,6 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
                 return await query.edit_message_text(t("QUIZ_DONE", lang))
             return
         return await send_quiz_question(update, wa_id, lesson, idx)
-    if query:
-        await query.answer()
-    wa_id = f"telegram:{query.message.chat.id}" if query and query.message and query.message.chat else ""
-    user = rowdict(engine.get_user(wa_id))
-    sess = rowdict(engine.get_session(wa_id))
-    lang = get_lang(wa_id)
 
     # Language selection
     if data.startswith("LANG:"):

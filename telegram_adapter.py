@@ -1210,7 +1210,6 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         topics = topics_for_user(wa_id, board, grade, subject)
         if 0 <= j < len(topics):
             chosen_topic = topics[j]
-            engine.upsert_user(wa_id, topic=chosen_topic)
             # Generate lesson for this topic
             level = user.get("level") if user and "level" in user else 1
             trouble = engine.recent_trouble_concepts(wa_id, subject) if user else None

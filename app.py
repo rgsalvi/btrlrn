@@ -245,7 +245,9 @@ def ai_generate_lesson(board, grade, subject_label, level, city, state, recent_m
     mastered_topics = get_mastered_topics(wa_id=wa_id, subject_label=subject_label) if subject_label and wa_id else []
     exclude_str = ""
     if mastered_topics:
-        exclude_str = f"\nDo NOT repeat any of these mastered topics (student scored 3/3): {', '.join(mastered_topics)}."
+        exclude_str = ("\nDo NOT repeat any topic whose title contains any of these phrases (student scored 3/3): "
+                      f"{', '.join(mastered_topics)}. If you must pick a new topic, make sure it is clearly different from these.")
+    logger.info(f"[AI] Prompt for {wa_id}:\n{exclude_str}")
     prompt = (
         "You are an expert Indian school tutor who generates short daily lessons and 3 multiple-choice questions. "
         "Keep content aligned with Indian curricula (CBSE/ICSE/State), culturally neutral, and age-appropriate. "
@@ -271,7 +273,8 @@ def ai_generate_lesson(board, grade, subject_label, level, city, state, recent_m
             assert isinstance(q["options"], list) and len(q["options"]) == 4
             assert q["ans"] in ("A","B","C","D")
         elapsed = time.monotonic() - start
-        logger.info(f"[AI] ok in {elapsed:.2f}s title={data.get('title','')!r}")
+    logger.info(f"[AI] ok in {elapsed:.2f}s title={data.get('title','')!r}")
+    logger.info(f"[AI] returned topic title: {data.get('title','')!r}")
         return data
     except Exception as e:
         elapsed = time.monotonic() - start

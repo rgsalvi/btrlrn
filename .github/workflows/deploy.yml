@@ -31,13 +31,6 @@ jobs:
           rm: false
           strip_components: 0
           timeout: 120s
-          exclude: |
-            .git
-            .github
-            venv
-            logs
-            .env
-            mvp.db
 
       - name: Install deps & restart bot
         uses: appleboy/ssh-action@v1.0.3

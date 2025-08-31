@@ -703,11 +703,11 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         return await send_quiz_question(update, wa_id, lesson, idx)
     query = update.callback_query
     await query.answer()
-    wa_id = f"telegram:{query.message.chat.id}"
+    wa_id = f"telegram:{query.message.chat.id}" if query and query.message and query.message.chat else ""
     user = rowdict(engine.get_user(wa_id))
     sess = rowdict(engine.get_session(wa_id))
     lang = get_lang(wa_id)
-    data = query.data or ""
+    data = query.data if query and query.data else ""
 
     # Language selection
     if data.startswith("LANG:"):

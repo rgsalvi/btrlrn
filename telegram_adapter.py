@@ -533,7 +533,14 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_te
     u = rowdict(engine.get_user(wa_id))
     if not u or not u.get("first_seen"):
         engine.upsert_user(wa_id, first_seen=_now_iso())
-    text = (update.message.text.strip() if update.message and update.message.text else "")
+
+    # Use forced_text if provided, else use message text
+    if forced_text is not None:
+        text = forced_text
+        up = forced_text.upper()
+    else:
+        text = (update.message.text.strip() if update.message and update.message.text else "")
+        up = text.upper()
     logger.info(f"[TG] INBOUND from={wa_id} body={text!r}")
 
     user = rowdict(engine.get_user(wa_id))
@@ -543,8 +550,8 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_te
     # ----------- Onboarding & Guard -----------
     if not user or (sess and (sess["stage"] or "").startswith("ask_")) or profile_missing_for_flow(user):
         stage = (sess["stage"] if sess else "ask_lang")
-        up = text.upper()
 
+        # Onboarding logic uses text, not up
         if stage == "ask_lang":
             engine.set_session(wa_id, "ask_lang")
             if update.message:
@@ -697,9 +704,7 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_te
         return
 
     # ---------- Commands (post-onboarding) ----------
-    up = ""
-    if update.message and getattr(update.message, 'text', None) and isinstance(update.message.text, str):
-        up = update.message.text.strip().upper()
+    # up is already set above
 
     if up == "HELP":
         if update.message:

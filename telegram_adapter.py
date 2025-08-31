@@ -815,9 +815,35 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_te
         engine.update_session(wa_id, stage="quiz")
         return await send_quiz_question(update, wa_id, lesson, idx)
 
+    # Handle editing each profile field (accept any input when stage starts with 'edit_')
+    sess = rowdict(engine.get_session(wa_id))
+    if sess and "stage" in sess and sess["stage"].startswith("edit_"):
+        field = sess["stage"].replace("edit_", "")
+        value = text
+        # Validate grade
+        if field == "grade":
+            g = re.sub(r"\D", "", value)
+            if not g or not (6 <= int(g) <= 12):
+                if update.message:
+                    return await update.message.reply_text("Invalid grade. Please enter a number between 6 and 12.")
+                return
+            value = g
+        # Validate subject
+        if field == "subject":
+            subs = subjects_for_user(wa_id)
+            if value not in subs:
+                if update.message:
+                    return await update.message.reply_text(f"Invalid subject. Please pick one of: {', '.join(subs)}")
+                return
+        # Update user profile
+        engine.upsert_user(wa_id, **{field: value})
+        engine.set_session(wa_id, "idle", 0, 0, None)
+        if update.message:
+            return await update.message.reply_text(t("PROFILE_UPDATED", lang))
+        return
+
     # A/B/C/D/E via text for subject/quiz/profile
     if len(up) == 1 and up in "ABCDE":
-        sess = rowdict(engine.get_session(wa_id))
         # Profile editing menu
         if sess and "stage" in sess and sess["stage"] == "profile_menu":
             # Map A-E to profile fields
@@ -836,31 +862,6 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_te
                 return
             if update.message:
                 return await update.message.reply_text(t("INVALID_CHOICE", lang))
-            return
-        # Handle editing each field
-        if sess and "stage" in sess and sess["stage"].startswith("edit_"):
-            field = sess["stage"].replace("edit_", "")
-            value = text
-            # Validate grade
-            if field == "grade":
-                g = re.sub(r"\D", "", value)
-                if not g or not (6 <= int(g) <= 12):
-                    if update.message:
-                        return await update.message.reply_text("Invalid grade. Please enter a number between 6 and 12.")
-                    return
-                value = g
-            # Validate subject
-            if field == "subject":
-                subs = subjects_for_user(wa_id)
-                if value not in subs:
-                    if update.message:
-                        return await update.message.reply_text(f"Invalid subject. Please pick one of: {', '.join(subs)}")
-                    return
-            # Update user profile
-            engine.upsert_user(wa_id, **{field: value})
-            engine.set_session(wa_id, "idle", 0, 0, None)
-            if update.message:
-                return await update.message.reply_text(t("PROFILE_UPDATED", lang))
             return
         # Subject selection menu
         if sess and "stage" in sess and sess["stage"] == "choose_subject":

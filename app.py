@@ -273,8 +273,8 @@ def ai_generate_lesson(board, grade, subject_label, level, city, state, recent_m
             assert isinstance(q["options"], list) and len(q["options"]) == 4
             assert q["ans"] in ("A","B","C","D")
         elapsed = time.monotonic() - start
-    logger.info(f"[AI] ok in {elapsed:.2f}s title={data.get('title','')!r}")
-    logger.info(f"[AI] returned topic title: {data.get('title','')!r}")
+        logger.info(f"[AI] ok in {elapsed:.2f}s title={data.get('title','')!r}")
+        logger.info(f"[AI] returned topic title: {data.get('title','')!r}")
         return data
     except Exception as e:
         elapsed = time.monotonic() - start

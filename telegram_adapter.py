@@ -553,8 +553,14 @@ def subjects_for_user(wa_id: str):
     u = rowdict(engine.get_user(wa_id))
     board = (u["board"] if u and "board" in u and u["board"] else "")
     grade = str(u["grade"] if u and "grade" in u and u["grade"] else "")
-    key = "STATE" if board.startswith("STATE:") else board
-    subs = engine.subjects_for(key, grade) or ["English","Mathematics","Science","Social Science"]
+    # Query subjects from syllabus table for this board and grade
+    conn = engine.db(); cur = conn.cursor()
+    cur.execute("SELECT DISTINCT subject FROM syllabus WHERE board=? AND grade=?", (board, grade))
+    subs = [r[0] for r in cur.fetchall()]
+    conn.close()
+    # Fallback to defaults if none found
+    if not subs:
+        subs = ["English","Mathematics","Science","Social Science"]
     return subs
 
 # Helper: get topics for subject/grade/board, excluding mastered
@@ -797,7 +803,23 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_te
         subs = subjects_for_user(wa_id)
         engine.set_session(wa_id, "choose_subject")
         if update.message:
-            return await update.message.reply_text(t("ASK_SUBJECT", lang), reply_markup=kb_subjects(subs))
+            await update.message.reply_text(t("ASK_SUBJECT", lang), reply_markup=kb_subjects(subs))
+        return
+
+    # Explicit topic selection after subject pick (for CBSE)
+    if up == "TOPIC":
+        user = rowdict(engine.get_user(wa_id))
+        board = user.get("board") if user else None
+        grade = user.get("grade") if user else None
+        subject = user.get("subject") if user else None
+        topics = topics_for_user(wa_id, board, grade, subject)
+        if not topics:
+            if update.message:
+                return await update.message.reply_text(f"🎉 You have mastered all topics in {subject} for Grade {grade}!", parse_mode="Markdown")
+            return
+        kb = InlineKeyboardMarkup([[InlineKeyboardButton(t, callback_data=f"TOPIC:{i}")] for i, t in enumerate(topics)])
+        if update.message:
+            return await update.message.reply_text(f"Pick a topic to learn in {subject} (Grade {grade}):", reply_markup=kb)
         return
 
     if up == "START":
@@ -1155,9 +1177,19 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         if 0 <= i < len(subs):
             chosen = subs[i]
             engine.upsert_user(wa_id, subject=chosen, level=1)
-            engine.set_session(wa_id, "idle", 0, 0, None)
+            engine.set_session(wa_id, "choose_topic")
+            # Show topic selection for this subject and grade
+            user = rowdict(engine.get_user(wa_id))
+            board = user.get("board") if user else None
+            grade = user.get("grade") if user else None
+            topics = topics_for_user(wa_id, board, grade, chosen)
+            if not topics:
+                if query:
+                    return await query.edit_message_text(f"🎉 You have mastered all topics in {chosen} for Grade {grade}!", parse_mode="Markdown")
+                return
+            kb = InlineKeyboardMarkup([[InlineKeyboardButton(t, callback_data=f"TOPIC:{j}")] for j, t in enumerate(topics)])
             if query:
-                return await query.edit_message_text(t("SUBJECT_SET", lang, subject=chosen), parse_mode="Markdown")
+                return await query.edit_message_text(f"Pick a topic to learn in {chosen} (Grade {grade}):", reply_markup=kb)
             return
         if query:
             return await query.answer(t("INVALID_CHOICE", lang), show_alert=True)

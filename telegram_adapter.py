@@ -837,6 +837,28 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_te
                 return
         # Update user profile
         engine.upsert_user(wa_id, **{field: value})
+
+        # If city is edited, re-guess state and prompt for confirmation or selection
+        if field == "city":
+            guessed = lookup_state_from_city(value)
+            if guessed:
+                engine.set_session(wa_id, f"confirm_state:{guessed}")
+                if update.message:
+                    return await update.message.reply_text(
+                        f"We think your state is *{guessed}*. Is that right?",
+                        reply_markup=kb_yesno(lang),
+                        parse_mode="Markdown"
+                    )
+                return
+            else:
+                engine.set_session(wa_id, "pick_state:0")
+                if update.message:
+                    return await update.message.reply_text(
+                        t("PICK_STATE", lang),
+                        reply_markup=kb_states_page(lang, 0)
+                    )
+                return
+
         engine.set_session(wa_id, "idle", 0, 0, None)
         if update.message:
             return await update.message.reply_text(t("PROFILE_UPDATED", lang))

@@ -263,7 +263,7 @@ def ai_generate_lesson(board, grade, subject_label, level, city, state, recent_m
     )
     try:
         logger.info(f"[AI] start board={board} grade={grade} subject={subject_label} level={level} city={city} state={state}")
-        response = gemini_model.generate_content(prompt, generation_config={"temperature": 0.4})
+        response = gemini_model.generate_content(prompt)
         txt = (response.text or "").strip()
         raw = extract_json(txt)
         data = json.loads(raw)
@@ -356,8 +356,8 @@ def create_app():
     load_dotenv()
     init_db()
 
-    # Gemini
-    genai.configure(api_key=os.environ.get("GOOGLE_API_KEY"))
+    # Gemini API (latest SDK)
+    genai.configure(api_key=os.environ["GOOGLE_API_KEY"])
     model_name = os.environ.get("GEMINI_MODEL", "gemini-1.5-flash")
     gemini_model = genai.GenerativeModel(model_name)
 

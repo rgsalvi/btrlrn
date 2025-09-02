@@ -989,7 +989,7 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_te
             user = rowdict(engine.get_user(wa_id))
             reply = engine.process_ai_answer(user, sess, up)
             # Update session to allow next question
-            engine.update_session(wa_id, stage="lesson")
+            engine.update_session(wa_id, stage="quiz")
             if update.message:
                 if "🎉" in reply:
                     return await update.message.reply_text(reply)
@@ -1075,6 +1075,11 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         if not sess or "lesson_id" not in sess or not sess["lesson_id"]:
             if query and getattr(query, 'edit_message_text', None):
                 return await query.edit_message_text(t("NO_LESSON", lang))
+            return
+        # Accept both 'quiz' and 'lesson' stages for next question
+        if sess["stage"] not in ("quiz", "lesson"):
+            if query and getattr(query, 'edit_message_text', None):
+                return await query.edit_message_text(t("SESSION_EXPIRED", lang))
             return
         lesson = engine.load_lesson(sess["lesson_id"])
         idx = sess["q_index"] if sess and "q_index" in sess else 0

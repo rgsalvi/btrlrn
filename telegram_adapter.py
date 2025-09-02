@@ -1101,9 +1101,6 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             return await query.answer(t("INVALID_CHOICE", lang), show_alert=True)
         return
     
-    # ...existing code...
-
-    # At top of function:
     query = update.callback_query
     data = query.data if query else None
     wa_id = ""
@@ -1134,8 +1131,20 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
                         reply_markup=kb_next_question())
             return
         return
-    if query:
-        await query.answer("OK")
+
+    # Next Question button
+    if data == "NEXTQ":
+        sess = rowdict(engine.get_session(wa_id))
+        if not (sess and sess["stage"] == "quiz"):
+            if query:
+                await query.edit_message_text(t("SESSION_EXPIRED", lang))
+            return
+    lesson_id = sess.get("lesson_id")
+    lesson = engine.load_lesson(lesson_id) if lesson_id else None
+    q_index = sess.get("q_index", 0) + 1 if sess else 0
+    engine.set_session(wa_id, "quiz", q_index=q_index, lesson_id=lesson_id)
+    await send_quiz_question(query, wa_id, lesson, q_index)
+    return
 
     if query:
         return await query.answer("OK")

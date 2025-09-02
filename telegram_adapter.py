@@ -684,25 +684,27 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_te
                 if update.message:
                     return await update.message.reply_text(f"{step_header(lang, 8, 'GRADE')}\n{t('ASK_GRADE', lang)}", reply_markup=kb_grades(lang))
                 return
-            city = (rowdict(engine.get_user(wa_id)) or {}).get("city","")
-            guessed = lookup_state_from_city(city)
-            engine.upsert_user(wa_id, board="STATE")  # temporary until confirmation
-            if guessed:
-                engine.set_session(wa_id, f"confirm_state:{guessed}")
-                if update.message:
-                    return await update.message.reply_text(
-                        f"{step_header(lang, 7, 'BOARD')}\n{t('STATE_GUESS', lang, state=guessed)}",
-                        reply_markup=kb_yesno(lang),
-                    )
-                return
-            else:
-                engine.set_session(wa_id, "pick_state:0")
-                if update.message:
-                    return await update.message.reply_text(
-                        f"{step_header(lang, 7, 'BOARD')}\n{t('PICK_STATE', lang)}",
-                        reply_markup=kb_states_page(lang, 0),
-                    )
-                return
+            # Only run state guessing for 'State' board
+            if choice == "STATE":
+                city = (rowdict(engine.get_user(wa_id)) or {}).get("city","")
+                guessed = lookup_state_from_city(city)
+                engine.upsert_user(wa_id, board="STATE")  # temporary until confirmation
+                if guessed:
+                    engine.set_session(wa_id, f"confirm_state:{guessed}")
+                    if update.message:
+                        return await update.message.reply_text(
+                            f"{step_header(lang, 7, 'BOARD')}\n{t('STATE_GUESS', lang, state=guessed)}",
+                            reply_markup=kb_yesno(lang),
+                        )
+                    return
+                else:
+                    engine.set_session(wa_id, "pick_state:0")
+                    if update.message:
+                        return await update.message.reply_text(
+                            f"{step_header(lang, 7, 'BOARD')}\n{t('PICK_STATE', lang)}",
+                            reply_markup=kb_states_page(lang, 0),
+                        )
+                    return
 
         if stage.startswith("confirm_state:"):
             guessed = stage.split(":",1)[1]

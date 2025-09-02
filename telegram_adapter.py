@@ -571,11 +571,15 @@ def subjects_for_user(wa_id: str):
 # Helper: get topics for subject/grade/board, excluding mastered
 def topics_for_user(wa_id, board, grade, subject):
     # Get all topics from syllabus_db
+    # Normalize board value for syllabus lookup
+    canonical_board = board
+    if board and board.startswith("STATE:"):
+        canonical_board = "STATE"
     conn = engine.db(); cur = conn.cursor()
-    cur.execute("SELECT topic FROM syllabus WHERE board=? AND grade=? AND subject=?", (board, grade, subject))
+    cur.execute("SELECT topic FROM syllabus WHERE board=? AND grade=? AND subject=?", (canonical_board, grade, subject))
     all_topics = [r[0] for r in cur.fetchall()]
     conn.close()
-    mastered = get_mastered_topics(wa_id, board, grade, subject)
+    mastered = get_mastered_topics(wa_id, canonical_board, grade, subject)
     return [t for t in all_topics if t not in mastered]
 
 async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_text: Optional[str] = None):
@@ -994,6 +998,7 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     # Handle START button callback
     if update and getattr(update, 'callback_query', None) and getattr(update.callback_query, 'data', None) == "START":
         query = update.callback_query
+        data = query.data if query else None
         wa_id = ""
         if query and getattr(query, 'message', None):
             chat_obj = getattr(query.message, 'chat', None)
@@ -1005,187 +1010,82 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             if query and getattr(query, 'edit_message_text', None):
                 return await query.edit_message_text("Profile not found. Please restart.")
             return
+        # Topic selection block
         level = user["level"] if user and "level" in user and user["level"] else 1
         subject = user["subject"] if user and "subject" in user else None
-        trouble = engine.recent_trouble_concepts(wa_id, subject)
-        raw_lesson = engine.ai_generate_lesson(
-            board=user.get("board") if user else None,
-            grade=user.get("grade") if user else None,
-            subject_label=subject,
-            level=level,
-            city=user.get("city") if user else None,
-            state=user.get("state") if user else None,
-            recent_mistakes=trouble,
-            wa_id=wa_id
-        ) if subject else None
-        if not raw_lesson:
-            if query and getattr(query, 'edit_message_text', None):
-                return await query.edit_message_text("Could not generate lesson. Please try again.")
-            return
-        lesson = translate_lesson_if_needed(raw_lesson, lang) if raw_lesson else None
-        lesson_id = engine.save_lesson(
-            wa_id=wa_id,
-            board=user.get("board") if user else None,
-            grade=user.get("grade") if user else None,
-            subject_label=subject,
-            level=level,
-            title=lesson["title"] if lesson else None,
-            intro=lesson["intro"] if lesson else None,
-            questions=lesson["questions"] if lesson else None
-        ) if lesson else None
-        engine.set_session(wa_id, "lesson", 0, 0, lesson_id)
-        intro = "\n".join(lesson["intro"][:3]) if lesson and "intro" in lesson else ""
-        if query and getattr(query, 'edit_message_text', None):
-            return await query.edit_message_text(
-                t("TOPIC", lang, title=lesson["title"] if lesson else "", level=level, intro=intro),
-                parse_mode="Markdown"
-            )
-        return
-    query = update.callback_query
-    data = query.data if query and query.data else ""
-    if query:
-        await query.answer()
-    
-    wa_id = ""
-    if query and getattr(query, 'message', None):
-        chat_obj = getattr(query.message, 'chat', None)
-        if chat_obj and hasattr(chat_obj, 'id'):
-            wa_id = f"telegram:{chat_obj.id}"
-    user = rowdict(engine.get_user(wa_id))
-    sess = rowdict(engine.get_session(wa_id))
-    lang = get_lang(wa_id)
-
-    # Handle Next Question button
-    if data == "NEXTQ":
-        if not sess or "lesson_id" not in sess or not sess["lesson_id"]:
-            if query and getattr(query, 'edit_message_text', None):
-                return await query.edit_message_text(t("NO_LESSON", lang))
-            return
-        lesson = engine.load_lesson(sess["lesson_id"])
-        idx = sess["q_index"] if sess and "q_index" in sess else 0
-        qs = lesson["questions"] if lesson and "questions" in lesson else []
-        if idx >= len(qs):
-            if query and getattr(query, 'edit_message_text', None):
-                return await query.edit_message_text(t("QUIZ_DONE", lang))
-            return
-        return await send_quiz_question(update, wa_id, lesson, idx)
-
-    # Language selection
-    if data.startswith("LANG:"):
-        lang_sel = data.split(":",1)[1]
-        set_lang(wa_id, lang_sel)
-        engine.set_session(wa_id, "ask_first")
-        if query:
-            return await query.edit_message_text(
-                f"{t('WELCOME', lang_sel)}\n\n{step_header(lang_sel, 1, 'FIRST_NAME')}\n{t('ASK_FIRST', lang_sel)}",
-                parse_mode="Markdown"
-            )
-        return
-
-    # Board selection
-    if data.startswith("BOARD:"):
-        board = data.split(":",1)[1]
-        if board in ("CBSE","ICSE"):
-            engine.upsert_user(wa_id, board=board)
-            engine.set_session(wa_id, "ask_grade")
-            if query:
-                return await query.edit_message_text(f"{step_header(lang, 8, 'GRADE')}\n{t('ASK_GRADE', lang)}", reply_markup=kb_grades(lang))
-            return
-        city = (rowdict(engine.get_user(wa_id)) or {}).get("city","")
-        engine.upsert_user(wa_id, board="STATE")
-        guessed = lookup_state_from_city(city) if city else None
-        if guessed:
-            engine.set_session(wa_id, f"confirm_state:{guessed}")
-            if query:
-                return await query.edit_message_text(
-                    f"{step_header(lang, 7, 'BOARD')}\n{t('STATE_GUESS', lang, state=guessed)}",
-                    reply_markup=kb_yesno(lang),
-                    parse_mode="Markdown"
-                )
-            return
-        else:
-            engine.set_session(wa_id, "pick_state:0")
-            if query:
-                return await query.edit_message_text(
-                    f"{step_header(lang, 7, 'BOARD')}\n{t('PICK_STATE', lang)}",
-                    reply_markup=kb_states_page(lang, 0)
-                )
-            return
+        if data and data.startswith("TOPIC:"):
+            j = int(data.split(":",1)[1])
+            board = user.get("board") if user else None
+            grade = user.get("grade") if user else None
+            subject = user.get("subject") if user else None
+            topics = topics_for_user(wa_id, board, grade, subject)
+            trouble = engine.recent_trouble_concepts(wa_id, subject) if user else None
+            if topics and 0 <= j < len(topics):
+                chosen_topic = topics[j]
+                raw_lesson = engine.ai_generate_lesson(
+                    board=board,
+                    grade=grade,
+                    subject_label=subject,
+                    level=level,
+                    city=user.get("city") if user else None,
+                    state=user.get("state") if user else None,
+                    recent_mistakes=trouble,
+                    wa_id=wa_id
+                ) if user else None
+                lesson = translate_lesson_if_needed(raw_lesson, lang) if raw_lesson else None
+                lesson_id = engine.save_lesson(
+                    wa_id=wa_id,
+                    board=board,
+                    grade=grade,
+                    subject_label=subject,
+                    level=level,
+                    title=lesson["title"] if lesson else None,
+                    intro=lesson["intro"] if lesson else None,
+                    questions=lesson["questions"] if lesson else None
+                ) if lesson else None
+                engine.set_session(wa_id, "lesson", 0, 0, lesson_id)
+                intro = "\n".join(lesson["intro"][:3]) if lesson and "intro" in lesson else ""
+                if query:
+                    return await query.edit_message_text(
+                        t("TOPIC", lang, title=lesson["title"] if lesson else "", level=level, intro=intro),
+                        parse_mode="Markdown"
+                    )
+                return
+            else:
+                # Fallback: if no topics found, prompt AI for a generic lesson/quiz
+                if query:
+                    await query.edit_message_text("No topics found in syllabus. Generating a lesson and quiz using AI...", parse_mode="Markdown")
+                    raw_lesson = engine.ai_generate_lesson(
+                        board=board,
+                        grade=grade,
+                        subject_label=subject,
+                        level=level,
+                        city=user.get("city") if user else None,
+                        state=user.get("state") if user else None,
+                        recent_mistakes=trouble,
+                        wa_id=wa_id
+                    ) if user else None
+                    lesson = translate_lesson_if_needed(raw_lesson, lang) if raw_lesson else None
+                    lesson_id = engine.save_lesson(
+                        wa_id=wa_id,
+                        board=board,
+                        grade=grade,
+                        subject_label=subject,
+                        level=level,
+                        title=lesson["title"] if lesson else None,
+                        intro=lesson["intro"] if lesson else None,
+                        questions=lesson["questions"] if lesson else None
+                    ) if lesson else None
+                    engine.set_session(wa_id, "lesson", 0, 0, lesson_id)
+                    intro = "\n".join(lesson["intro"][:3]) if lesson and "intro" in lesson else ""
+                    return await query.edit_message_text(
+                        t("TOPIC", lang, title=lesson["title"] if lesson else "", level=level, intro=intro),
+                        parse_mode="Markdown"
+                    )
+                return
 
     # Yes/No for state guess
-    if data.startswith("YN:"):
-        yn = data.split(":",1)[1]
-        stage = sess["stage"] if sess else ""
-        if not stage.startswith("confirm_state:"):
-            if query:
-                return await query.edit_message_text(t("SESSION_EXPIRED", lang))
-            return
-        guessed = stage.split(":",1)[1]
-        if yn == "Y":
-            engine.upsert_user(wa_id, board=f"STATE: {guessed}", state=guessed)
-            engine.set_session(wa_id, "ask_grade")
-            if query:
-                return await query.edit_message_text(f"{step_header(lang, 8, 'GRADE')}\n{t('ASK_GRADE', lang)}", reply_markup=kb_grades(lang))
-            return
-        else:
-            engine.set_session(wa_id, "pick_state:0")
-            if query:
-                return await query.edit_message_text(f"{step_header(lang, 7, 'BOARD')}\n{t('PICK_STATE', lang)}", reply_markup=kb_states_page(lang, 0))
-            return
-
-    # State paging
-    if data.startswith("PG:"):
-        start = int(data.split(":",1)[1])
-        engine.set_session(wa_id, f"pick_state:{start}")
-        if query:
-            return await query.edit_message_text(t("PICK_STATE", lang), reply_markup=kb_states_page(lang, start))
-        return
-
-    # Pick state
-    if data.startswith("STATE:"):
-        pick = data.split(":",1)[1]
-        if pick not in IN_STATES:
-            if query:
-                return await query.answer(t("INVALID_CHOICE", lang), show_alert=True)
-            return
-        engine.upsert_user(wa_id, board=f"STATE: {pick}", state=pick)
-        engine.set_session(wa_id, "ask_grade")
-        if query:
-            return await query.edit_message_text(f"{step_header(lang, 8, 'GRADE')}\n{t('ASK_GRADE', lang)}", reply_markup=kb_grades(lang))
-        return
-
-    # Grade pick
-    if data.startswith("GRADE:"):
-        g = data.split(":",1)[1]
-        if not g.isdigit() or not (6 <= int(g) <= 12):
-            if query:
-                return await query.answer(t("INVALID_CHOICE", lang), show_alert=True)
-            return
-        engine.upsert_user(wa_id, grade=g, subject="Mathematics", level=1, streak=0)
-        subs = subjects_for_user(wa_id)
-        engine.set_session(wa_id, "choose_subject")
-        if query:
-            await query.edit_message_text(t("PROFILE_SAVED", lang))
-            # Instead of reply_text, send a new message using bot context
-            if query.message and hasattr(ctx, 'bot'):
-                chat_id = query.message.chat.id if hasattr(query.message, 'chat') and hasattr(query.message.chat, 'id') else None
-                if chat_id:
-                    await ctx.bot.send_message(chat_id=chat_id,
-                        text=f"{step_header(lang, 9, 'SUBJECT')}\n{t('ASK_SUBJECT', lang)}",
-                        reply_markup=kb_subjects(subs))
-            return
-        return
-
-    # Subject pick
-    if data.startswith("SUBJ:"):
-        i = int(data.split(":",1)[1])
-        subs = subjects_for_user(wa_id)
-        if 0 <= i < len(subs):
-            chosen = subs[i]
-            engine.upsert_user(wa_id, subject=chosen, level=1)
-            engine.set_session(wa_id, "choose_topic")
-            # Show topic selection for this subject and grade
-            user = rowdict(engine.get_user(wa_id))
+    # ...existing code...
             board = user.get("board") if user else None
             grade = user.get("grade") if user else None
             topics = topics_for_user(wa_id, board, grade, chosen)
@@ -1201,64 +1101,29 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             return await query.answer(t("INVALID_CHOICE", lang), show_alert=True)
         return
     
-    # Topic pick
-    if data.startswith("TOPIC:"):
-        j = int(data.split(":",1)[1])
-        user = rowdict(engine.get_user(wa_id))
-        board = user.get("board") if user else None
-        grade = user.get("grade") if user else None
-        subject = user.get("subject") if user else None
-        topics = topics_for_user(wa_id, board, grade, subject)
-        if 0 <= j < len(topics):
-            chosen_topic = topics[j]
-            # Generate lesson for this topic
-            level = user.get("level") if user and "level" in user else 1
-            trouble = engine.recent_trouble_concepts(wa_id, subject) if user else None
-            raw_lesson = engine.ai_generate_lesson(
-                board=board,
-                grade=grade,
-                subject_label=subject,
-                level=level,
-                city=user.get("city") if user else None,
-                state=user.get("state") if user else None,
-                recent_mistakes=trouble,
-                wa_id=wa_id
-            ) if user else None
-            lesson = translate_lesson_if_needed(raw_lesson, lang) if raw_lesson else None
-            lesson_id = engine.save_lesson(
-                wa_id=wa_id,
-                board=board,
-                grade=grade,
-                subject_label=subject,
-                level=level,
-                title=lesson["title"] if lesson else None,
-                intro=lesson["intro"] if lesson else None,
-                questions=lesson["questions"] if lesson else None
-            ) if lesson else None
-            engine.set_session(wa_id, "lesson", 0, 0, lesson_id)
-            intro = "\n".join(lesson["intro"][:3]) if lesson and "intro" in lesson else ""
-            if query:
-                return await query.edit_message_text(
-                    t("TOPIC", lang, title=lesson["title"] if lesson else "", level=level, intro=intro),
-                    parse_mode="Markdown"
-                )
-            return
-        if query:
-            return await query.answer(t("INVALID_CHOICE", lang), show_alert=True)
-        return
+    # ...existing code...
+
+    # At top of function:
+    query = update.callback_query
+    data = query.data if query else None
+    wa_id = ""
+    if query and getattr(query, 'message', None):
+        chat_obj = getattr(query.message, 'chat', None)
+        if chat_obj and hasattr(chat_obj, 'id'):
+            wa_id = f"telegram:{chat_obj.id}"
+    lang = get_lang(wa_id)
+    user = rowdict(engine.get_user(wa_id))
 
     # Answer buttons
-    if data.startswith("ANS:"):
+    if data and data.startswith("ANS:"):
         choice = data.split(":",1)[1]
         sess = rowdict(engine.get_session(wa_id))
         if not (sess and sess["stage"] == "quiz"):
             if query:
-                return await query.edit_message_text(t("SESSION_EXPIRED", lang))
+                await query.edit_message_text(t("SESSION_EXPIRED", lang))
             return
         reply = engine.process_ai_answer(user, sess, choice)
         if query:
-            if "🎉" in reply:
-                return await query.edit_message_text(reply)
             await query.edit_message_text(reply)
             # Instead of reply_text, send a new message using bot context
             if query.message and hasattr(ctx, 'bot'):
@@ -1269,6 +1134,8 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
                         reply_markup=kb_next_question())
             return
         return
+    if query:
+        await query.answer("OK")
 
     if query:
         return await query.answer("OK")

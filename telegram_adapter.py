@@ -1112,7 +1112,7 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             return
         lesson_id = sess.get("lesson_id") if sess else None
         lesson = engine.load_lesson(lesson_id) if lesson_id else None
-        q_index = sess.get("q_index", 0) + 1 if sess else 0
+        q_index = sess.get("q_index", 0)
         if not lesson:
             if query:
                 await query.edit_message_text(t("NO_LESSON", lang))
@@ -1131,6 +1131,10 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
                 )
             logger.info(f"[NEXTQ] Quiz complete for wa_id={wa_id} lesson_id={lesson_id}")
             return
+        # Show the next question
+        engine.set_session(wa_id, "quiz", q_index=q_index, lesson_id=lesson_id)
+        await send_quiz_question(query, wa_id, lesson, q_index)
+        return
     # Handle 'More questions' button
     if data == "MOREQ":
         sess = rowdict(engine.get_session(wa_id))
@@ -1185,9 +1189,6 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         if query:
             await query.edit_message_text(f"Pick a topic to learn in {subject} (Grade {grade}):", reply_markup=kb)
         return
-        engine.set_session(wa_id, "quiz", q_index=q_index, lesson_id=lesson_id)
-        await send_quiz_question(query, wa_id, lesson, q_index)
-        return
 
     # Only respond 'OK' for truly unknown callback data
     known_callbacks = ["TOPIC:", "ANS:", "NEXTQ", "MOREQ", "NEWLESSON"]
@@ -1224,28 +1225,6 @@ if __name__ == "__main__":
     app.add_handler(MessageHandler(filters.CONTACT, contact_handler))
     from functools import partial
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, lambda update, ctx: text_handler(update, ctx)))
-    app.add_handler(CallbackQueryHandler(on_button))
-
-    print("🤖 Telegram bot is running… press Ctrl+C to stop.")
-    app.run_polling()
-
-    token = os.environ["TELEGRAM_BOT_TOKEN"].strip()
-    # More forgiving HTTP client (fixes intermittent timeouts)
-    req = HTTPXRequest(
-        connection_pool_size=20,
-        connect_timeout=20.0,
-        read_timeout=60.0,
-        write_timeout=20.0,
-        pool_timeout=20.0,
-        http_version="1.1",
-    )
-
-    app = Application.builder().token(token).request(req).build()
-
-    app.add_handler(CommandHandler("start", start_cmd))
-    app.add_handler(CommandHandler("adminstats", admin_stats_handler))
-    app.add_handler(MessageHandler(filters.CONTACT, contact_handler))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_handler))
     app.add_handler(CallbackQueryHandler(on_button))
 
     print("🤖 Telegram bot is running… press Ctrl+C to stop.")

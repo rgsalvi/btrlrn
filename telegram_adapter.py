@@ -11,7 +11,8 @@ async def dob_year_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     year = callback_query.data.split(":")[1]
     sess = rowdict(engine.get_session(wa_id)) or {}
     sess["dob_year"] = year
-    engine.set_session(wa_id, "ask_dob", **sess)
+    allowed = {k: v for k, v in sess.items() if k in ("dob_year", "dob_month", "dob_day")}
+    engine.set_session(wa_id, "ask_dob", **allowed)
     await callback_query.answer()
     # Re-enter onboarding flow to trigger month picker
     return await text_handler(update, ctx)
@@ -26,7 +27,8 @@ async def dob_month_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     month = callback_query.data.split(":")[1]
     sess = rowdict(engine.get_session(wa_id)) or {}
     sess["dob_month"] = month
-    engine.set_session(wa_id, "ask_dob", **sess)
+    allowed = {k: v for k, v in sess.items() if k in ("dob_year", "dob_month", "dob_day")}
+    engine.set_session(wa_id, "ask_dob", **allowed)
     await callback_query.answer()
     # Re-enter onboarding flow to trigger day picker
     return await text_handler(update, ctx)
@@ -41,7 +43,8 @@ async def dob_day_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     day = callback_query.data.split(":")[1]
     sess = rowdict(engine.get_session(wa_id)) or {}
     sess["dob_day"] = day
-    engine.set_session(wa_id, "ask_dob", **sess)
+    allowed = {k: v for k, v in sess.items() if k in ("dob_year", "dob_month", "dob_day")}
+    engine.set_session(wa_id, "ask_dob", **allowed)
     await callback_query.answer()
     # Re-enter onboarding flow to save DOB and continue
     return await text_handler(update, ctx)

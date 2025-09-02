@@ -601,16 +601,52 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_te
     # ----------- Persistent Progress & Onboarding -----------
     # If user profile is complete, always greet and continue, never run onboarding
     if user and not profile_missing_for_flow(user):
-        # Greet returning user if just opened chat
-        if update.message:
-            await update.message.reply_text(f"👋 Welcome back, {user.get('first_name','')}! Continuing your progress.")
+        # If user sends START, bypass greeting and generate lesson
+        if up == "START":
+            if update.message:
+                await update.message.reply_text(t("GENERATING", lang))
+            try:
+                level = user.get("level") if user and "level" in user else 1
+                trouble = engine.recent_trouble_concepts(wa_id, user.get("subject")) if user else None
+                raw_lesson = engine.ai_generate_lesson(
+                    board=user.get("board") if user else None,
+                    grade=user.get("grade") if user else None,
+                    subject_label=user.get("subject") if user else None,
+                    level=level,
+                    city=user.get("city") if user else None,
+                    state=user.get("state") if user else None,
+                    recent_mistakes=trouble,
+                    wa_id=wa_id
+                ) if user else None
+                lesson = translate_lesson_if_needed(raw_lesson, lang) if raw_lesson else None
+                lesson_id = engine.save_lesson(
+                    wa_id=wa_id,
+                    board=user.get("board") if user else None,
+                    grade=user.get("grade") if user else None,
+                    subject_label=user.get("subject") if user else None,
+                    level=level,
+                    title=lesson["title"] if lesson else None,
+                    intro=lesson["intro"] if lesson else None,
+                    questions=lesson["questions"] if lesson else None
+                ) if lesson else None
+                engine.set_session(wa_id, "lesson", 0, 0, lesson_id)
+                intro = "\n".join(lesson["intro"][:3]) if lesson and "intro" in lesson else ""
+                if update.message:
+                    return await update.message.reply_text(t("TOPIC", lang, title=lesson["title"] if lesson else "", level=level, intro=intro), parse_mode="Markdown")
+                return
+            except Exception as e:
+                logger.error(f"[TG] AI generation error: {e}")
+                if update.message:
+                    return await update.message.reply_text(t("AI_ERROR", lang))
+                return
         # Resume lesson/quiz if session is active
         if sess and sess["stage"] == "lesson" and sess["lesson_id"]:
             lesson = engine.load_lesson(sess["lesson_id"])
             if lesson:
                 return await send_quiz_question(update, wa_id, lesson, sess["q_index"])
-        # Otherwise, prompt for next action
-        if update.message:
+        # Otherwise, greet and prompt only if not a command
+        if update.message and up not in ("START", "HELP", "PROFILE", "RESET", "RANK", "STATS", "SUBJECT", "TOPIC", "QUIZ"):
+            await update.message.reply_text(f"👋 Welcome back, {user.get('first_name','')}! Continuing your progress.")
             await update.message.reply_text("Type START to begin a new lesson, or HELP for options.")
         return
 

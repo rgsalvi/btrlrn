@@ -988,6 +988,8 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_te
         if sess and "stage" in sess and sess["stage"] == "quiz":
             user = rowdict(engine.get_user(wa_id))
             reply = engine.process_ai_answer(user, sess, up)
+            # Update session to allow next question
+            engine.update_session(wa_id, stage="lesson")
             if update.message:
                 if "🎉" in reply:
                     return await update.message.reply_text(reply)

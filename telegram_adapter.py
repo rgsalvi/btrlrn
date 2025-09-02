@@ -599,6 +599,8 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_te
     lang = get_lang(wa_id)
 
     # ----------- Onboarding & Guard -----------
+    # Debug logging for onboarding triggers
+    logger.info(f"[ONBOARDING CHECK] user={user} session={sess} missing_profile={profile_missing_for_flow(user) if user else 'no user'}")
     if not user or (sess and (sess["stage"] or "").startswith("ask_")) or profile_missing_for_flow(user):
         stage = (sess["stage"] if sess else "ask_lang")
 

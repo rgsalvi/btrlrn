@@ -1,3 +1,55 @@
+from telegram import Update
+from telegram.ext import CallbackQueryHandler, ContextTypes
+# --- DOB Inline Keyboard Handlers ---
+async def dob_year_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    if not getattr(update, "callback_query", None):
+        return
+    wa_id = uid_from_tg(update)
+    callback_query = update.callback_query
+    if not callback_query or not isinstance(callback_query.data, str):
+        return
+    year = callback_query.data.split(":")[1]
+    sess = rowdict(engine.get_session(wa_id)) or {}
+    sess["dob_year"] = year
+    engine.set_session(wa_id, "ask_dob", **sess)
+    await callback_query.answer()
+    # Re-enter onboarding flow to trigger month picker
+    return await text_handler(update, ctx)
+
+async def dob_month_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    if not getattr(update, "callback_query", None):
+        return
+    wa_id = uid_from_tg(update)
+    callback_query = update.callback_query
+    if not callback_query or not isinstance(callback_query.data, str):
+        return
+    month = callback_query.data.split(":")[1]
+    sess = rowdict(engine.get_session(wa_id)) or {}
+    sess["dob_month"] = month
+    engine.set_session(wa_id, "ask_dob", **sess)
+    await callback_query.answer()
+    # Re-enter onboarding flow to trigger day picker
+    return await text_handler(update, ctx)
+
+async def dob_day_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    if not getattr(update, "callback_query", None):
+        return
+    wa_id = uid_from_tg(update)
+    callback_query = update.callback_query
+    if not callback_query or not isinstance(callback_query.data, str):
+        return
+    day = callback_query.data.split(":")[1]
+    sess = rowdict(engine.get_session(wa_id)) or {}
+    sess["dob_day"] = day
+    engine.set_session(wa_id, "ask_dob", **sess)
+    await callback_query.answer()
+    # Re-enter onboarding flow to save DOB and continue
+    return await text_handler(update, ctx)
+# --- Register DOB CallbackQueryHandlers ---
+def register_dob_handlers(app):
+    app.add_handler(CallbackQueryHandler(dob_year_handler, pattern=r"^DOB_YEAR:"))
+    app.add_handler(CallbackQueryHandler(dob_month_handler, pattern=r"^DOB_MONTH:"))
+    app.add_handler(CallbackQueryHandler(dob_day_handler, pattern=r"^DOB_DAY:"))
 # telegram_adapter.py
 import os
 import sys
@@ -651,16 +703,40 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_te
             return
 
         if stage == "ask_dob" or (user and not user.get("dob")):
-            if not text or not valid_dob(text):
+            sess = sess or {}
+            # Start DOB selection with year picker
+            if not sess.get("dob_year"):
+                years = [str(y) for y in range(2010, 2016)]
+                keyboard = [[InlineKeyboardButton(y, callback_data=f"DOB_YEAR:{y}") for y in years]]
+                markup = InlineKeyboardMarkup(keyboard)
                 if update.message:
-                    return await update.message.reply_text(f"{step_header(lang, 3, 'DOB')}\n{t('DOB_BAD', lang)}")
+                    return await update.message.reply_text(f"{step_header(lang, 3, 'DOB')}\nSelect your birth year:", reply_markup=markup)
                 return
-            engine.upsert_user(wa_id, dob=text)
-            engine.set_session(wa_id, "ask_phone")
-            kb = ReplyKeyboardMarkup([[KeyboardButton(t("PHONE_BTN", lang), request_contact=True)]], resize_keyboard=True, one_time_keyboard=True)
-            if update.message:
-                return await update.message.reply_text(f"{step_header(lang, 4, 'PHONE')}\n{t('ASK_PHONE', lang)}", reply_markup=kb)
-            return
+            # Next: month picker
+            if sess.get("dob_year") and not sess.get("dob_month"):
+                months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+                keyboard = [[InlineKeyboardButton(m, callback_data=f"DOB_MONTH:{i+1}") for i, m in enumerate(months)]]
+                markup = InlineKeyboardMarkup(keyboard)
+                if update.message:
+                    return await update.message.reply_text(f"{step_header(lang, 3, 'DOB')}\nSelect your birth month:", reply_markup=markup)
+                return
+            # Next: day picker
+            if sess.get("dob_year") and sess.get("dob_month") and not sess.get("dob_day"):
+                days = [str(d) for d in range(1, 32)]
+                keyboard = [[InlineKeyboardButton(d, callback_data=f"DOB_DAY:{d}") for d in days]]
+                markup = InlineKeyboardMarkup(keyboard)
+                if update.message:
+                    return await update.message.reply_text(f"{step_header(lang, 3, 'DOB')}\nSelect your birth day:", reply_markup=markup)
+                return
+            # All selected: save DOB
+            if sess.get("dob_year") and sess.get("dob_month") and sess.get("dob_day"):
+                dob_str = f"{sess.get('dob_day'):0>2}-{sess.get('dob_month'):0>2}-{sess.get('dob_year')}"
+                engine.upsert_user(wa_id, dob=dob_str)
+                engine.set_session(wa_id, "ask_phone")
+                kb = ReplyKeyboardMarkup([[KeyboardButton(t("PHONE_BTN", lang), request_contact=True)]], resize_keyboard=True, one_time_keyboard=True)
+                if update.message:
+                    return await update.message.reply_text(f"{step_header(lang, 4, 'PHONE')}\n{t('ASK_PHONE', lang)}", reply_markup=kb)
+                return
 
         if stage == "ask_phone" or (user and not user.get("phone")):
             digits = re.sub(r"\D","", text or "")
@@ -1318,6 +1394,7 @@ if __name__ == "__main__":
     app.add_handler(MessageHandler(filters.CONTACT, contact_handler))
     from functools import partial
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, lambda update, ctx: text_handler(update, ctx)))
+    register_dob_handlers(app)
     app.add_handler(CallbackQueryHandler(on_button))
 
     print("🤖 Telegram bot is running… press Ctrl+C to stop.")

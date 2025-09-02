@@ -1138,10 +1138,83 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         if not (sess and sess["stage"] == "quiz"):
             if query:
                 await query.edit_message_text(t("SESSION_EXPIRED", lang))
+            logger.warning(f"[NEXTQ] No valid quiz session for wa_id={wa_id}")
             return
         lesson_id = sess.get("lesson_id") if sess else None
         lesson = engine.load_lesson(lesson_id) if lesson_id else None
         q_index = sess.get("q_index", 0) + 1 if sess else 0
+        if not lesson:
+            if query:
+                await query.edit_message_text(t("NO_LESSON", lang))
+            logger.warning(f"[NEXTQ] No lesson found for lesson_id={lesson_id} wa_id={wa_id}")
+            return
+        if q_index >= len(lesson["questions"]):
+            # Prompt user for more questions or new lesson
+            if query:
+                kb = InlineKeyboardMarkup([
+                    [InlineKeyboardButton("More questions", callback_data="MOREQ")],
+                    [InlineKeyboardButton("New lesson", callback_data="NEWLESSON")]
+                ])
+                await query.edit_message_text(
+                    "You've completed all questions for this lesson. Would you like more questions on this lesson, or move to a new lesson?",
+                    reply_markup=kb
+                )
+            logger.info(f"[NEXTQ] Quiz complete for wa_id={wa_id} lesson_id={lesson_id}")
+            return
+    # Handle 'More questions' button
+    if data == "MOREQ":
+        sess = rowdict(engine.get_session(wa_id))
+        lesson_id = sess.get("lesson_id") if sess else None
+        lesson = engine.load_lesson(lesson_id) if lesson_id else None
+        if not lesson:
+            if query:
+                await query.edit_message_text(t("NO_LESSON", lang))
+            return
+        # Generate more questions using AI
+        board = user.get("board") if user else None
+        grade = user.get("grade") if user else None
+        subject = lesson.get("subject_label") if lesson else None
+        level = lesson.get("level") if lesson else 1
+        trouble = engine.recent_trouble_concepts(wa_id, subject) if user else None
+        ai_result = engine.ai_generate_lesson(
+            board=board,
+            grade=grade,
+            subject_label=subject,
+            level=level,
+            city=user.get("city") if user else None,
+            state=user.get("state") if user else None,
+            recent_mistakes=trouble,
+            wa_id=wa_id
+        ) if user else None
+        new_questions = ai_result["questions"] if ai_result and "questions" in ai_result else []
+        if new_questions:
+            lesson["questions"].extend(new_questions)
+            # Optionally, update lesson in DB if persistent
+            # engine.update_lesson_questions(lesson_id, lesson["questions"])
+            q_index = sess.get("q_index", 0) if sess else 0
+            await send_quiz_question(query, wa_id, lesson, q_index)
+        else:
+            if query:
+                await query.edit_message_text("No additional questions could be generated.")
+        return
+
+    # Handle 'New lesson' button
+    if data == "NEWLESSON":
+        # Trigger topic selection flow (simulate as if user picked a new topic)
+        engine.set_session(wa_id, "choose_topic")
+        user = rowdict(engine.get_user(wa_id))
+        board = user.get("board") if user else None
+        grade = user.get("grade") if user else None
+        subject = user.get("subject") if user else None
+        topics = topics_for_user(wa_id, board, grade, subject)
+        if not topics:
+            if query:
+                await query.edit_message_text("No topics found. Please update your profile or try again later.")
+            return
+        kb = InlineKeyboardMarkup([[InlineKeyboardButton(t, callback_data=f"TOPIC:{j}")] for j, t in enumerate(topics)])
+        if query:
+            await query.edit_message_text(f"Pick a topic to learn in {subject} (Grade {grade}):", reply_markup=kb)
+        return
         engine.set_session(wa_id, "quiz", q_index=q_index, lesson_id=lesson_id)
         await send_quiz_question(query, wa_id, lesson, q_index)
         return

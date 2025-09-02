@@ -1139,12 +1139,12 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             if query:
                 await query.edit_message_text(t("SESSION_EXPIRED", lang))
             return
-    lesson_id = sess.get("lesson_id")
-    lesson = engine.load_lesson(lesson_id) if lesson_id else None
-    q_index = sess.get("q_index", 0) + 1 if sess else 0
-    engine.set_session(wa_id, "quiz", q_index=q_index, lesson_id=lesson_id)
-    await send_quiz_question(query, wa_id, lesson, q_index)
-    return
+        lesson_id = sess.get("lesson_id") if sess else None
+        lesson = engine.load_lesson(lesson_id) if lesson_id else None
+        q_index = sess.get("q_index", 0) + 1 if sess else 0
+        engine.set_session(wa_id, "quiz", q_index=q_index, lesson_id=lesson_id)
+        await send_quiz_question(query, wa_id, lesson, q_index)
+        return
 
     if query:
         return await query.answer("OK")

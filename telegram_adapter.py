@@ -105,10 +105,10 @@ CAT = {
         "DOB": "🎂 Date of Birth",
         "ASK_DOB": "Please send your date of birth in *DD-MM-YYYY* (e.g., 25-04-2012).",
         "DOB_BAD": "Oops! Use *DD-MM-YYYY* like *25-04-2012*.",
-    "PHONE": "Child Safety Notice",
-    "ASK_PHONE": "In the interest of your child's safety, we do not collect any identifiable information at this stage. However, full child and parent KYC will be required when claiming any prizes.",
-    "PHONE_BTN": "I acknowledge and agree to these terms",
-    "PHONE_BAD": "Please tap the button below to acknowledge and agree to these terms.",
+        "PHONE": "📱 Mobile Number",
+        "ASK_PHONE": "Tap *Share my phone* or type your 10-digit mobile number.",
+        "PHONE_BTN": "Share my phone",
+        "PHONE_BAD": "Hmm… send a 10-digit Indian mobile (starts 6–9), e.g., 9876543210.",
         "CITY": "🏙️ City",
         "ASK_CITY": "Which *city* do you live in?",
         "BOARD": "📚 Curriculum",
@@ -166,10 +166,10 @@ CAT = {
         "DOB": "🎂 जन्मतिथि",
         "ASK_DOB": "*DD-MM-YYYY* में जन्मतिथि भेजें (जैसे 25-04-2012)।",
         "DOB_BAD": "ओह! कृपया *DD-MM-YYYY* जैसे *25-04-2012* भेजें।",
-    "PHONE": "बाल सुरक्षा सूचना",
-    "ASK_PHONE": "बच्चे की सुरक्षा के लिए, हम इस चरण में कोई पहचान योग्य जानकारी नहीं लेते हैं। लेकिन पुरस्कार प्राप्त करने के लिए बच्चे और अभिभावक का पूरा KYC आवश्यक होगा।",
-    "PHONE_BTN": "मैं सहमत हूँ और शर्तें स्वीकार करता हूँ",
-    "PHONE_BAD": "कृपया नीचे दिए गए बटन को दबाकर शर्तें स्वीकार करें।",
+        "PHONE": "📱 मोबाइल नंबर",
+        "ASK_PHONE": "*Share my phone* दबाएँ या 10 अंकों का मोबाइल नंबर लिखें।",
+        "PHONE_BTN": "Share my phone",
+        "PHONE_BAD": "कृपया 10 अंकों का भारतीय नंबर भेजें (6–9 से शुरू), जैसे 9876543210।",
         "CITY": "🏙️ शहर",
         "ASK_CITY": "आप किस *शहर* में रहते हैं?",
         "BOARD": "📚 पाठ्यक्रम",
@@ -227,10 +227,10 @@ CAT = {
         "DOB": "🎂 जन्मतारीख",
         "ASK_DOB": "*DD-MM-YYYY* या स्वरूपात जन्मतारीख पाठवा (उदा. 25-04-2012).",
         "DOB_BAD": "अरेरे! *DD-MM-YYYY* जसे *25-04-2012* वापरा.",
-    "PHONE": "बाल सुरक्षा सूचना",
-    "ASK_PHONE": "मुलांच्या सुरक्षेसाठी, या टप्प्यावर कोणतीही ओळख पटणारी माहिती घेत नाही. मात्र बक्षीस मिळवताना पूर्ण मुलगा आणि पालक KYC आवश्यक आहे.",
-    "PHONE_BTN": "मी सहमत आहे आणि अटी स्वीकारतो",
-    "PHONE_BAD": "कृपया खालील बटन दाबून अटी स्वीकारा.",
+        "PHONE": "📱 मोबाईल क्रमांक",
+        "ASK_PHONE": "*Share my phone* दाबा किंवा 10 अंकी मोबाईल क्रमांक टाइप करा.",
+        "PHONE_BTN": "Share my phone",
+        "PHONE_BAD": "कृपया 10 अंकी भारतीय क्रमांक पाठवा (6–9 ने सुरू), उदा. 9876543210.",
         "CITY": "🏙️ शहर",
         "ASK_CITY": "तुम्ही कोणत्या *शहरात* राहता?",
         "BOARD": "📚 अभ्यासक्रम",
@@ -571,15 +571,11 @@ def subjects_for_user(wa_id: str):
 # Helper: get topics for subject/grade/board, excluding mastered
 def topics_for_user(wa_id, board, grade, subject):
     # Get all topics from syllabus_db
-    # Normalize board value for syllabus lookup
-    canonical_board = board
-    if board and board.startswith("STATE:"):
-        canonical_board = "STATE"
     conn = engine.db(); cur = conn.cursor()
-    cur.execute("SELECT topic FROM syllabus WHERE board=? AND grade=? AND subject=?", (canonical_board, grade, subject))
+    cur.execute("SELECT topic FROM syllabus WHERE board=? AND grade=? AND subject=?", (board, grade, subject))
     all_topics = [r[0] for r in cur.fetchall()]
     conn.close()
-    mastered = get_mastered_topics(wa_id, canonical_board, grade, subject)
+    mastered = get_mastered_topics(wa_id, board, grade, subject)
     return [t for t in all_topics if t not in mastered]
 
 async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_text: Optional[str] = None):
@@ -603,8 +599,6 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_te
     lang = get_lang(wa_id)
 
     # ----------- Onboarding & Guard -----------
-    # Debug logging for onboarding triggers
-    logger.info(f"[ONBOARDING CHECK] user={user} session={sess} missing_profile={profile_missing_for_flow(user) if user else 'no user'}")
     if not user or (sess and (sess["stage"] or "").startswith("ask_")) or profile_missing_for_flow(user):
         stage = (sess["stage"] if sess else "ask_lang")
 
@@ -647,21 +641,24 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_te
                 return
             engine.upsert_user(wa_id, dob=text)
             engine.set_session(wa_id, "ask_phone")
-            kb = ReplyKeyboardMarkup([[KeyboardButton(t("PHONE_BTN", lang))]], resize_keyboard=True, one_time_keyboard=True)
+            kb = ReplyKeyboardMarkup([[KeyboardButton(t("PHONE_BTN", lang), request_contact=True)]], resize_keyboard=True, one_time_keyboard=True)
             if update.message:
                 return await update.message.reply_text(f"{step_header(lang, 4, 'PHONE')}\n{t('ASK_PHONE', lang)}", reply_markup=kb)
             return
 
-        if stage == "ask_phone":
-            # Show safety message and acknowledgment button
-            if text.strip() == t("PHONE_BTN", lang):
-                engine.set_session(wa_id, "ask_city")
+        if stage == "ask_phone" or (user and not user.get("phone")):
+            digits = re.sub(r"\D","", text or "")
+            if digits.startswith("91") and len(digits) == 12:
+                digits = digits[2:]
+            if not valid_indian_mobile10(digits):
+                kb = ReplyKeyboardMarkup([[KeyboardButton(t("PHONE_BTN", lang), request_contact=True)]], resize_keyboard=True, one_time_keyboard=True)
                 if update.message:
-                    return await update.message.reply_text(f"{step_header(lang, 5, 'CITY')}\n{t('ASK_CITY', lang)}", reply_markup=None)
+                    return await update.message.reply_text(t("PHONE_BAD", lang), reply_markup=kb)
                 return
-            kb = ReplyKeyboardMarkup([[KeyboardButton(t("PHONE_BTN", lang))]], resize_keyboard=True, one_time_keyboard=True)
+            engine.upsert_user(wa_id, phone=digits)
+            engine.set_session(wa_id, "ask_city")
             if update.message:
-                return await update.message.reply_text(t("ASK_PHONE", lang), reply_markup=kb)
+                return await update.message.reply_text(f"{step_header(lang, 5, 'CITY')}\n{t('ASK_CITY', lang)}", reply_markup=None)
             return
 
         if stage == "ask_city" or (user and not user.get("city")):
@@ -690,8 +687,36 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_te
                 if update.message:
                     return await update.message.reply_text(f"{step_header(lang, 8, 'GRADE')}\n{t('ASK_GRADE', lang)}", reply_markup=kb_grades(lang))
                 return
-            # Only run state guessing for 'State' board
-    # ...existing code...
+            city = (rowdict(engine.get_user(wa_id)) or {}).get("city","")
+            guessed = lookup_state_from_city(city)
+            engine.upsert_user(wa_id, board="STATE")  # temporary until confirmation
+            if guessed:
+                engine.set_session(wa_id, f"confirm_state:{guessed}")
+                if update.message:
+                    return await update.message.reply_text(
+                        f"{step_header(lang, 7, 'BOARD')}\n{t('STATE_GUESS', lang, state=guessed)}",
+                        reply_markup=kb_yesno(lang),
+                    )
+                return
+            else:
+                engine.set_session(wa_id, "pick_state:0")
+                if update.message:
+                    return await update.message.reply_text(
+                        f"{step_header(lang, 7, 'BOARD')}\n{t('PICK_STATE', lang)}",
+                        reply_markup=kb_states_page(lang, 0),
+                    )
+                return
+
+        if stage.startswith("confirm_state:"):
+            guessed = stage.split(":",1)[1]
+            affirmative = text.strip().lower() in ("y","yes","ha","haan","haanji","ho","hoi","हो","हाँ")
+            if affirmative:
+                engine.upsert_user(wa_id, board=f"STATE: {guessed}", state=guessed)
+                engine.set_session(wa_id, "ask_grade")
+                if update.message:
+                    return await update.message.reply_text(f"{step_header(lang, 8, 'GRADE')}\n{t('ASK_GRADE', lang)}", reply_markup=kb_grades(lang))
+                return
+            engine.set_session(wa_id, "pick_state:0")
             if update.message:
                 return await update.message.reply_text(f"{step_header(lang, 7, 'BOARD')}\n{t('PICK_STATE', lang)}", reply_markup=kb_states_page(lang, 0))
             return
@@ -968,7 +993,6 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     # Handle START button callback
     if update and getattr(update, 'callback_query', None) and getattr(update.callback_query, 'data', None) == "START":
         query = update.callback_query
-        data = query.data if query else None
         wa_id = ""
         if query and getattr(query, 'message', None):
             chat_obj = getattr(query.message, 'chat', None)
@@ -980,82 +1004,187 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             if query and getattr(query, 'edit_message_text', None):
                 return await query.edit_message_text("Profile not found. Please restart.")
             return
-        # Topic selection block
         level = user["level"] if user and "level" in user and user["level"] else 1
         subject = user["subject"] if user and "subject" in user else None
-        if data and data.startswith("TOPIC:"):
-            j = int(data.split(":",1)[1])
-            board = user.get("board") if user else None
-            grade = user.get("grade") if user else None
-            subject = user.get("subject") if user else None
-            topics = topics_for_user(wa_id, board, grade, subject)
-            trouble = engine.recent_trouble_concepts(wa_id, subject) if user else None
-            if topics and 0 <= j < len(topics):
-                chosen_topic = topics[j]
-                raw_lesson = engine.ai_generate_lesson(
-                    board=board,
-                    grade=grade,
-                    subject_label=subject,
-                    level=level,
-                    city=user.get("city") if user else None,
-                    state=user.get("state") if user else None,
-                    recent_mistakes=trouble,
-                    wa_id=wa_id
-                ) if user else None
-                lesson = translate_lesson_if_needed(raw_lesson, lang) if raw_lesson else None
-                lesson_id = engine.save_lesson(
-                    wa_id=wa_id,
-                    board=board,
-                    grade=grade,
-                    subject_label=subject,
-                    level=level,
-                    title=lesson["title"] if lesson else None,
-                    intro=lesson["intro"] if lesson else None,
-                    questions=lesson["questions"] if lesson else None
-                ) if lesson else None
-                engine.set_session(wa_id, "lesson", 0, 0, lesson_id)
-                intro = "\n".join(lesson["intro"][:3]) if lesson and "intro" in lesson else ""
-                if query:
-                    return await query.edit_message_text(
-                        t("TOPIC", lang, title=lesson["title"] if lesson else "", level=level, intro=intro),
-                        parse_mode="Markdown"
-                    )
-                return
-            else:
-                # Fallback: if no topics found, prompt AI for a generic lesson/quiz
-                if query:
-                    await query.edit_message_text("No topics found in syllabus. Generating a lesson and quiz using AI...", parse_mode="Markdown")
-                    raw_lesson = engine.ai_generate_lesson(
-                        board=board,
-                        grade=grade,
-                        subject_label=subject,
-                        level=level,
-                        city=user.get("city") if user else None,
-                        state=user.get("state") if user else None,
-                        recent_mistakes=trouble,
-                        wa_id=wa_id
-                    ) if user else None
-                    lesson = translate_lesson_if_needed(raw_lesson, lang) if raw_lesson else None
-                    lesson_id = engine.save_lesson(
-                        wa_id=wa_id,
-                        board=board,
-                        grade=grade,
-                        subject_label=subject,
-                        level=level,
-                        title=lesson["title"] if lesson else None,
-                        intro=lesson["intro"] if lesson else None,
-                        questions=lesson["questions"] if lesson else None
-                    ) if lesson else None
-                    engine.set_session(wa_id, "lesson", 0, 0, lesson_id)
-                    intro = "\n".join(lesson["intro"][:3]) if lesson and "intro" in lesson else ""
-                    return await query.edit_message_text(
-                        t("TOPIC", lang, title=lesson["title"] if lesson else "", level=level, intro=intro),
-                        parse_mode="Markdown"
-                    )
-                return
+        trouble = engine.recent_trouble_concepts(wa_id, subject)
+        raw_lesson = engine.ai_generate_lesson(
+            board=user.get("board") if user else None,
+            grade=user.get("grade") if user else None,
+            subject_label=subject,
+            level=level,
+            city=user.get("city") if user else None,
+            state=user.get("state") if user else None,
+            recent_mistakes=trouble,
+            wa_id=wa_id
+        ) if subject else None
+        if not raw_lesson:
+            if query and getattr(query, 'edit_message_text', None):
+                return await query.edit_message_text("Could not generate lesson. Please try again.")
+            return
+        lesson = translate_lesson_if_needed(raw_lesson, lang) if raw_lesson else None
+        lesson_id = engine.save_lesson(
+            wa_id=wa_id,
+            board=user.get("board") if user else None,
+            grade=user.get("grade") if user else None,
+            subject_label=subject,
+            level=level,
+            title=lesson["title"] if lesson else None,
+            intro=lesson["intro"] if lesson else None,
+            questions=lesson["questions"] if lesson else None
+        ) if lesson else None
+        engine.set_session(wa_id, "lesson", 0, 0, lesson_id)
+        intro = "\n".join(lesson["intro"][:3]) if lesson and "intro" in lesson else ""
+        if query and getattr(query, 'edit_message_text', None):
+            return await query.edit_message_text(
+                t("TOPIC", lang, title=lesson["title"] if lesson else "", level=level, intro=intro),
+                parse_mode="Markdown"
+            )
+        return
+    query = update.callback_query
+    data = query.data if query and query.data else ""
+    if query:
+        await query.answer()
+    
+    wa_id = ""
+    if query and getattr(query, 'message', None):
+        chat_obj = getattr(query.message, 'chat', None)
+        if chat_obj and hasattr(chat_obj, 'id'):
+            wa_id = f"telegram:{chat_obj.id}"
+    user = rowdict(engine.get_user(wa_id))
+    sess = rowdict(engine.get_session(wa_id))
+    lang = get_lang(wa_id)
+
+    # Handle Next Question button
+    if data == "NEXTQ":
+        if not sess or "lesson_id" not in sess or not sess["lesson_id"]:
+            if query and getattr(query, 'edit_message_text', None):
+                return await query.edit_message_text(t("NO_LESSON", lang))
+            return
+        lesson = engine.load_lesson(sess["lesson_id"])
+        idx = sess["q_index"] if sess and "q_index" in sess else 0
+        qs = lesson["questions"] if lesson and "questions" in lesson else []
+        if idx >= len(qs):
+            if query and getattr(query, 'edit_message_text', None):
+                return await query.edit_message_text(t("QUIZ_DONE", lang))
+            return
+        return await send_quiz_question(update, wa_id, lesson, idx)
+
+    # Language selection
+    if data.startswith("LANG:"):
+        lang_sel = data.split(":",1)[1]
+        set_lang(wa_id, lang_sel)
+        engine.set_session(wa_id, "ask_first")
+        if query:
+            return await query.edit_message_text(
+                f"{t('WELCOME', lang_sel)}\n\n{step_header(lang_sel, 1, 'FIRST_NAME')}\n{t('ASK_FIRST', lang_sel)}",
+                parse_mode="Markdown"
+            )
+        return
+
+    # Board selection
+    if data.startswith("BOARD:"):
+        board = data.split(":",1)[1]
+        if board in ("CBSE","ICSE"):
+            engine.upsert_user(wa_id, board=board)
+            engine.set_session(wa_id, "ask_grade")
+            if query:
+                return await query.edit_message_text(f"{step_header(lang, 8, 'GRADE')}\n{t('ASK_GRADE', lang)}", reply_markup=kb_grades(lang))
+            return
+        city = (rowdict(engine.get_user(wa_id)) or {}).get("city","")
+        engine.upsert_user(wa_id, board="STATE")
+        guessed = lookup_state_from_city(city) if city else None
+        if guessed:
+            engine.set_session(wa_id, f"confirm_state:{guessed}")
+            if query:
+                return await query.edit_message_text(
+                    f"{step_header(lang, 7, 'BOARD')}\n{t('STATE_GUESS', lang, state=guessed)}",
+                    reply_markup=kb_yesno(lang),
+                    parse_mode="Markdown"
+                )
+            return
+        else:
+            engine.set_session(wa_id, "pick_state:0")
+            if query:
+                return await query.edit_message_text(
+                    f"{step_header(lang, 7, 'BOARD')}\n{t('PICK_STATE', lang)}",
+                    reply_markup=kb_states_page(lang, 0)
+                )
+            return
 
     # Yes/No for state guess
-    # ...existing code...
+    if data.startswith("YN:"):
+        yn = data.split(":",1)[1]
+        stage = sess["stage"] if sess else ""
+        if not stage.startswith("confirm_state:"):
+            if query:
+                return await query.edit_message_text(t("SESSION_EXPIRED", lang))
+            return
+        guessed = stage.split(":",1)[1]
+        if yn == "Y":
+            engine.upsert_user(wa_id, board=f"STATE: {guessed}", state=guessed)
+            engine.set_session(wa_id, "ask_grade")
+            if query:
+                return await query.edit_message_text(f"{step_header(lang, 8, 'GRADE')}\n{t('ASK_GRADE', lang)}", reply_markup=kb_grades(lang))
+            return
+        else:
+            engine.set_session(wa_id, "pick_state:0")
+            if query:
+                return await query.edit_message_text(f"{step_header(lang, 7, 'BOARD')}\n{t('PICK_STATE', lang)}", reply_markup=kb_states_page(lang, 0))
+            return
+
+    # State paging
+    if data.startswith("PG:"):
+        start = int(data.split(":",1)[1])
+        engine.set_session(wa_id, f"pick_state:{start}")
+        if query:
+            return await query.edit_message_text(t("PICK_STATE", lang), reply_markup=kb_states_page(lang, start))
+        return
+
+    # Pick state
+    if data.startswith("STATE:"):
+        pick = data.split(":",1)[1]
+        if pick not in IN_STATES:
+            if query:
+                return await query.answer(t("INVALID_CHOICE", lang), show_alert=True)
+            return
+        engine.upsert_user(wa_id, board=f"STATE: {pick}", state=pick)
+        engine.set_session(wa_id, "ask_grade")
+        if query:
+            return await query.edit_message_text(f"{step_header(lang, 8, 'GRADE')}\n{t('ASK_GRADE', lang)}", reply_markup=kb_grades(lang))
+        return
+
+    # Grade pick
+    if data.startswith("GRADE:"):
+        g = data.split(":",1)[1]
+        if not g.isdigit() or not (6 <= int(g) <= 12):
+            if query:
+                return await query.answer(t("INVALID_CHOICE", lang), show_alert=True)
+            return
+        engine.upsert_user(wa_id, grade=g, subject="Mathematics", level=1, streak=0)
+        subs = subjects_for_user(wa_id)
+        engine.set_session(wa_id, "choose_subject")
+        if query:
+            await query.edit_message_text(t("PROFILE_SAVED", lang))
+            # Instead of reply_text, send a new message using bot context
+            if query.message and hasattr(ctx, 'bot'):
+                chat_id = query.message.chat.id if hasattr(query.message, 'chat') and hasattr(query.message.chat, 'id') else None
+                if chat_id:
+                    await ctx.bot.send_message(chat_id=chat_id,
+                        text=f"{step_header(lang, 9, 'SUBJECT')}\n{t('ASK_SUBJECT', lang)}",
+                        reply_markup=kb_subjects(subs))
+            return
+        return
+
+    # Subject pick
+    if data.startswith("SUBJ:"):
+        i = int(data.split(":",1)[1])
+        subs = subjects_for_user(wa_id)
+        if 0 <= i < len(subs):
+            chosen = subs[i]
+            engine.upsert_user(wa_id, subject=chosen, level=1)
+            engine.set_session(wa_id, "choose_topic")
+            # Show topic selection for this subject and grade
+            user = rowdict(engine.get_user(wa_id))
             board = user.get("board") if user else None
             grade = user.get("grade") if user else None
             topics = topics_for_user(wa_id, board, grade, chosen)
@@ -1071,26 +1200,64 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             return await query.answer(t("INVALID_CHOICE", lang), show_alert=True)
         return
     
-    query = update.callback_query
-    data = query.data if query else None
-    wa_id = ""
-    if query and getattr(query, 'message', None):
-        chat_obj = getattr(query.message, 'chat', None)
-        if chat_obj and hasattr(chat_obj, 'id'):
-            wa_id = f"telegram:{chat_obj.id}"
-    lang = get_lang(wa_id)
-    user = rowdict(engine.get_user(wa_id))
+    # Topic pick
+    if data.startswith("TOPIC:"):
+        j = int(data.split(":",1)[1])
+        user = rowdict(engine.get_user(wa_id))
+        board = user.get("board") if user else None
+        grade = user.get("grade") if user else None
+        subject = user.get("subject") if user else None
+        topics = topics_for_user(wa_id, board, grade, subject)
+        if 0 <= j < len(topics):
+            chosen_topic = topics[j]
+            # Generate lesson for this topic
+            level = user.get("level") if user and "level" in user else 1
+            trouble = engine.recent_trouble_concepts(wa_id, subject) if user else None
+            raw_lesson = engine.ai_generate_lesson(
+                board=board,
+                grade=grade,
+                subject_label=subject,
+                level=level,
+                city=user.get("city") if user else None,
+                state=user.get("state") if user else None,
+                recent_mistakes=trouble,
+                wa_id=wa_id
+            ) if user else None
+            lesson = translate_lesson_if_needed(raw_lesson, lang) if raw_lesson else None
+            lesson_id = engine.save_lesson(
+                wa_id=wa_id,
+                board=board,
+                grade=grade,
+                subject_label=subject,
+                level=level,
+                title=lesson["title"] if lesson else None,
+                intro=lesson["intro"] if lesson else None,
+                questions=lesson["questions"] if lesson else None
+            ) if lesson else None
+            engine.set_session(wa_id, "lesson", 0, 0, lesson_id)
+            intro = "\n".join(lesson["intro"][:3]) if lesson and "intro" in lesson else ""
+            if query:
+                return await query.edit_message_text(
+                    t("TOPIC", lang, title=lesson["title"] if lesson else "", level=level, intro=intro),
+                    parse_mode="Markdown"
+                )
+            return
+        if query:
+            return await query.answer(t("INVALID_CHOICE", lang), show_alert=True)
+        return
 
     # Answer buttons
-    if data and data.startswith("ANS:"):
+    if data.startswith("ANS:"):
         choice = data.split(":",1)[1]
         sess = rowdict(engine.get_session(wa_id))
         if not (sess and sess["stage"] == "quiz"):
             if query:
-                await query.edit_message_text(t("SESSION_EXPIRED", lang))
+                return await query.edit_message_text(t("SESSION_EXPIRED", lang))
             return
         reply = engine.process_ai_answer(user, sess, choice)
         if query:
+            if "🎉" in reply:
+                return await query.edit_message_text(reply)
             await query.edit_message_text(reply)
             # Instead of reply_text, send a new message using bot context
             if query.message and hasattr(ctx, 'bot'):
@@ -1102,97 +1269,7 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             return
         return
 
-    # Next Question button
-    if data == "NEXTQ":
-        sess = rowdict(engine.get_session(wa_id))
-        if not (sess and sess["stage"] == "quiz"):
-            if query:
-                await query.edit_message_text(t("SESSION_EXPIRED", lang))
-            logger.warning(f"[NEXTQ] No valid quiz session for wa_id={wa_id}")
-            return
-        lesson_id = sess.get("lesson_id") if sess else None
-        lesson = engine.load_lesson(lesson_id) if lesson_id else None
-        q_index = sess.get("q_index", 0)
-        if not lesson:
-            if query:
-                await query.edit_message_text(t("NO_LESSON", lang))
-            logger.warning(f"[NEXTQ] No lesson found for lesson_id={lesson_id} wa_id={wa_id}")
-            return
-        if q_index >= len(lesson["questions"]):
-            # Prompt user for more questions or new lesson
-            if query:
-                kb = InlineKeyboardMarkup([
-                    [InlineKeyboardButton("More questions", callback_data="MOREQ")],
-                    [InlineKeyboardButton("New lesson", callback_data="NEWLESSON")]
-                ])
-                await query.edit_message_text(
-                    "You've completed all questions for this lesson. Would you like more questions on this lesson, or move to a new lesson?",
-                    reply_markup=kb
-                )
-            logger.info(f"[NEXTQ] Quiz complete for wa_id={wa_id} lesson_id={lesson_id}")
-            return
-        # Show the next question
-        engine.set_session(wa_id, "quiz", q_index=q_index, lesson_id=lesson_id)
-        await send_quiz_question(query, wa_id, lesson, q_index)
-        return
-    # Handle 'More questions' button
-    if data == "MOREQ":
-        sess = rowdict(engine.get_session(wa_id))
-        lesson_id = sess.get("lesson_id") if sess else None
-        lesson = engine.load_lesson(lesson_id) if lesson_id else None
-        if not lesson:
-            if query:
-                await query.edit_message_text(t("NO_LESSON", lang))
-            return
-        # Generate more questions using AI
-        board = user.get("board") if user else None
-        grade = user.get("grade") if user else None
-        subject = lesson.get("subject_label") if lesson else None
-        level = lesson.get("level") if lesson else 1
-        trouble = engine.recent_trouble_concepts(wa_id, subject) if user else None
-        ai_result = engine.ai_generate_lesson(
-            board=board,
-            grade=grade,
-            subject_label=subject,
-            level=level,
-            city=user.get("city") if user else None,
-            state=user.get("state") if user else None,
-            recent_mistakes=trouble,
-            wa_id=wa_id
-        ) if user else None
-        new_questions = ai_result["questions"] if ai_result and "questions" in ai_result else []
-        if new_questions:
-            lesson["questions"].extend(new_questions)
-            # Optionally, update lesson in DB if persistent
-            # engine.update_lesson_questions(lesson_id, lesson["questions"])
-            q_index = sess.get("q_index", 0) if sess else 0
-            await send_quiz_question(query, wa_id, lesson, q_index)
-        else:
-            if query:
-                await query.edit_message_text("No additional questions could be generated.")
-        return
-
-    # Handle 'New lesson' button
-    if data == "NEWLESSON":
-        # Trigger topic selection flow (simulate as if user picked a new topic)
-        engine.set_session(wa_id, "choose_topic")
-        user = rowdict(engine.get_user(wa_id))
-        board = user.get("board") if user else None
-        grade = user.get("grade") if user else None
-        subject = user.get("subject") if user else None
-        topics = topics_for_user(wa_id, board, grade, subject)
-        if not topics:
-            if query:
-                await query.edit_message_text("No topics found. Please update your profile or try again later.")
-            return
-        kb = InlineKeyboardMarkup([[InlineKeyboardButton(t, callback_data=f"TOPIC:{j}")] for j, t in enumerate(topics)])
-        if query:
-            await query.edit_message_text(f"Pick a topic to learn in {subject} (Grade {grade}):", reply_markup=kb)
-        return
-
-    # Only respond 'OK' for truly unknown callback data
-    known_callbacks = ["TOPIC:", "ANS:", "NEXTQ", "MOREQ", "NEWLESSON"]
-    if query and data and not any(data.startswith(cb) for cb in known_callbacks):
+    if query:
         return await query.answer("OK")
 
 # ---------- Launcher (Windows-friendly + tolerant HTTP client) ----------
@@ -1225,6 +1302,28 @@ if __name__ == "__main__":
     app.add_handler(MessageHandler(filters.CONTACT, contact_handler))
     from functools import partial
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, lambda update, ctx: text_handler(update, ctx)))
+    app.add_handler(CallbackQueryHandler(on_button))
+
+    print("🤖 Telegram bot is running… press Ctrl+C to stop.")
+    app.run_polling()
+
+    token = os.environ["TELEGRAM_BOT_TOKEN"].strip()
+    # More forgiving HTTP client (fixes intermittent timeouts)
+    req = HTTPXRequest(
+        connection_pool_size=20,
+        connect_timeout=20.0,
+        read_timeout=60.0,
+        write_timeout=20.0,
+        pool_timeout=20.0,
+        http_version="1.1",
+    )
+
+    app = Application.builder().token(token).request(req).build()
+
+    app.add_handler(CommandHandler("start", start_cmd))
+    app.add_handler(CommandHandler("adminstats", admin_stats_handler))
+    app.add_handler(MessageHandler(filters.CONTACT, contact_handler))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_handler))
     app.add_handler(CallbackQueryHandler(on_button))
 
     print("🤖 Telegram bot is running… press Ctrl+C to stop.")

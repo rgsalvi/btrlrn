@@ -433,9 +433,16 @@ async def send_quiz_question(update_or_query, wa_id, lesson, q_index):
         f"{q['options'][2]}\n"
         f"{q['options'][3]}"
     )
+    image_url = q.get("image_url")
     if isinstance(update_or_query, Update):
         if update_or_query.message is not None:
-            return await update_or_query.message.reply_text(textq, reply_markup=kb_abcd())
+            if image_url:
+                await update_or_query.message.reply_photo(photo=image_url, caption=q['q'])
+                return await update_or_query.message.reply_text(
+                    "\n".join(q['options']), reply_markup=kb_abcd()
+                )
+            else:
+                return await update_or_query.message.reply_text(textq, reply_markup=kb_abcd())
         if update_or_query.callback_query is not None:
             return await update_or_query.callback_query.edit_message_text(textq, reply_markup=kb_abcd())
     # fallback: do nothing if neither is available

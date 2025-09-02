@@ -255,7 +255,10 @@ def ai_generate_lesson(board, grade, subject_label, level, city, state, recent_m
         f"Student profile: Board={board}, Grade={grade}, Subject={subject_label} (topic family={topic_hint}), "
         f"City={city}, State={state}. Current Level={level}.{recent}{exclude_str}\n"
         "Create a tiny 'topic of the day' lesson that gets slightly more advanced with higher levels. "
-        "THEN generate exactly 3 MCQs with options A-D, each with a short explanation for the correct answer.\n\n"
+        "THEN generate exactly 3 MCQs with options A-D, each with a short explanation for the correct answer.\n"
+        "For each MCQ, if relevant, include an 'image_url' field with a direct link to a suitable image (diagram, chart, etc). "
+        "You may also include 'audio_url' or 'video_url' fields if appropriate. "
+        "If no media is relevant, omit these fields.\n\n"
         f"{AI_JSON_SCHEMA}"
     )
     try:

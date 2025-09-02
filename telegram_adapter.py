@@ -105,10 +105,10 @@ CAT = {
         "DOB": "🎂 Date of Birth",
         "ASK_DOB": "Please send your date of birth in *DD-MM-YYYY* (e.g., 25-04-2012).",
         "DOB_BAD": "Oops! Use *DD-MM-YYYY* like *25-04-2012*.",
-        "PHONE": "📱 Mobile Number",
-        "ASK_PHONE": "Tap *Share my phone* or type your 10-digit mobile number.",
-        "PHONE_BTN": "Share my phone",
-        "PHONE_BAD": "Hmm… send a 10-digit Indian mobile (starts 6–9), e.g., 9876543210.",
+    "PHONE": "Child Safety Notice",
+    "ASK_PHONE": "In the interest of your child's safety, we do not collect any identifiable information at this stage. However, full child and parent KYC will be required when claiming any prizes.",
+    "PHONE_BTN": "I acknowledge and agree to these terms",
+    "PHONE_BAD": "Please tap the button below to acknowledge and agree to these terms.",
         "CITY": "🏙️ City",
         "ASK_CITY": "Which *city* do you live in?",
         "BOARD": "📚 Curriculum",
@@ -166,10 +166,10 @@ CAT = {
         "DOB": "🎂 जन्मतिथि",
         "ASK_DOB": "*DD-MM-YYYY* में जन्मतिथि भेजें (जैसे 25-04-2012)।",
         "DOB_BAD": "ओह! कृपया *DD-MM-YYYY* जैसे *25-04-2012* भेजें।",
-        "PHONE": "📱 मोबाइल नंबर",
-        "ASK_PHONE": "*Share my phone* दबाएँ या 10 अंकों का मोबाइल नंबर लिखें।",
-        "PHONE_BTN": "Share my phone",
-        "PHONE_BAD": "कृपया 10 अंकों का भारतीय नंबर भेजें (6–9 से शुरू), जैसे 9876543210।",
+    "PHONE": "बाल सुरक्षा सूचना",
+    "ASK_PHONE": "बच्चे की सुरक्षा के लिए, हम इस चरण में कोई पहचान योग्य जानकारी नहीं लेते हैं। लेकिन पुरस्कार प्राप्त करने के लिए बच्चे और अभिभावक का पूरा KYC आवश्यक होगा।",
+    "PHONE_BTN": "मैं सहमत हूँ और शर्तें स्वीकार करता हूँ",
+    "PHONE_BAD": "कृपया नीचे दिए गए बटन को दबाकर शर्तें स्वीकार करें।",
         "CITY": "🏙️ शहर",
         "ASK_CITY": "आप किस *शहर* में रहते हैं?",
         "BOARD": "📚 पाठ्यक्रम",
@@ -227,10 +227,10 @@ CAT = {
         "DOB": "🎂 जन्मतारीख",
         "ASK_DOB": "*DD-MM-YYYY* या स्वरूपात जन्मतारीख पाठवा (उदा. 25-04-2012).",
         "DOB_BAD": "अरेरे! *DD-MM-YYYY* जसे *25-04-2012* वापरा.",
-        "PHONE": "📱 मोबाईल क्रमांक",
-        "ASK_PHONE": "*Share my phone* दाबा किंवा 10 अंकी मोबाईल क्रमांक टाइप करा.",
-        "PHONE_BTN": "Share my phone",
-        "PHONE_BAD": "कृपया 10 अंकी भारतीय क्रमांक पाठवा (6–9 ने सुरू), उदा. 9876543210.",
+    "PHONE": "बाल सुरक्षा सूचना",
+    "ASK_PHONE": "मुलांच्या सुरक्षेसाठी, या टप्प्यावर कोणतीही ओळख पटणारी माहिती घेत नाही. मात्र बक्षीस मिळवताना पूर्ण मुलगा आणि पालक KYC आवश्यक आहे.",
+    "PHONE_BTN": "मी सहमत आहे आणि अटी स्वीकारतो",
+    "PHONE_BAD": "कृपया खालील बटन दाबून अटी स्वीकारा.",
         "CITY": "🏙️ शहर",
         "ASK_CITY": "तुम्ही कोणत्या *शहरात* राहता?",
         "BOARD": "📚 अभ्यासक्रम",
@@ -641,24 +641,21 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_te
                 return
             engine.upsert_user(wa_id, dob=text)
             engine.set_session(wa_id, "ask_phone")
-            kb = ReplyKeyboardMarkup([[KeyboardButton(t("PHONE_BTN", lang), request_contact=True)]], resize_keyboard=True, one_time_keyboard=True)
+            kb = ReplyKeyboardMarkup([[KeyboardButton(t("PHONE_BTN", lang))]], resize_keyboard=True, one_time_keyboard=True)
             if update.message:
                 return await update.message.reply_text(f"{step_header(lang, 4, 'PHONE')}\n{t('ASK_PHONE', lang)}", reply_markup=kb)
             return
 
-        if stage == "ask_phone" or (user and not user.get("phone")):
-            digits = re.sub(r"\D","", text or "")
-            if digits.startswith("91") and len(digits) == 12:
-                digits = digits[2:]
-            if not valid_indian_mobile10(digits):
-                kb = ReplyKeyboardMarkup([[KeyboardButton(t("PHONE_BTN", lang), request_contact=True)]], resize_keyboard=True, one_time_keyboard=True)
+        if stage == "ask_phone":
+            # Show safety message and acknowledgment button
+            if text.strip() == t("PHONE_BTN", lang):
+                engine.set_session(wa_id, "ask_city")
                 if update.message:
-                    return await update.message.reply_text(t("PHONE_BAD", lang), reply_markup=kb)
+                    return await update.message.reply_text(f"{step_header(lang, 5, 'CITY')}\n{t('ASK_CITY', lang)}", reply_markup=None)
                 return
-            engine.upsert_user(wa_id, phone=digits)
-            engine.set_session(wa_id, "ask_city")
+            kb = ReplyKeyboardMarkup([[KeyboardButton(t("PHONE_BTN", lang))]], resize_keyboard=True, one_time_keyboard=True)
             if update.message:
-                return await update.message.reply_text(f"{step_header(lang, 5, 'CITY')}\n{t('ASK_CITY', lang)}", reply_markup=None)
+                return await update.message.reply_text(t("ASK_PHONE", lang), reply_markup=kb)
             return
 
         if stage == "ask_city" or (user and not user.get("city")):

@@ -1219,7 +1219,9 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         await send_quiz_question(query, wa_id, lesson, q_index)
         return
 
-    if query:
+    # Only respond 'OK' for truly unknown callback data
+    known_callbacks = ["TOPIC:", "ANS:", "NEXTQ", "MOREQ", "NEWLESSON"]
+    if query and data and not any(data.startswith(cb) for cb in known_callbacks):
         return await query.answer("OK")
 
 # ---------- Launcher (Windows-friendly + tolerant HTTP client) ----------

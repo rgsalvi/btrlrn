@@ -434,13 +434,22 @@ async def send_quiz_question(update_or_query, wa_id, lesson, q_index):
         f"{q['options'][3]}"
     )
     image_url = q.get("image_url")
+    valid_image = False
+    if image_url and isinstance(image_url, str):
+        image_url_lower = image_url.lower()
+        valid_image = image_url_lower.startswith("http") and image_url_lower.split('?')[0].endswith((".jpg", ".jpeg", ".png", ".gif", ".bmp"))
     if isinstance(update_or_query, Update):
         if update_or_query.message is not None:
-            if image_url:
-                await update_or_query.message.reply_photo(photo=image_url, caption=q['q'])
-                return await update_or_query.message.reply_text(
-                    "\n".join(q['options']), reply_markup=kb_abcd()
-                )
+            if valid_image:
+                try:
+                    await update_or_query.message.reply_photo(photo=image_url, caption=q['q'])
+                    return await update_or_query.message.reply_text(
+                        "\n".join(q['options']), reply_markup=kb_abcd()
+                    )
+                except Exception as e:
+                    logger.warning(f"[TG] Failed to send image: {image_url} error: {e}")
+                    # fallback to text only
+                    return await update_or_query.message.reply_text(textq, reply_markup=kb_abcd())
             else:
                 return await update_or_query.message.reply_text(textq, reply_markup=kb_abcd())
         if update_or_query.callback_query is not None:

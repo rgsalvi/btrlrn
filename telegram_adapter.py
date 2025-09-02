@@ -599,29 +599,23 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_te
     lang = get_lang(wa_id)
 
     # ----------- Persistent Progress & Onboarding -----------
-    # If user profile is complete, greet and continue from last session
+    # If user profile is complete, always greet and continue, never run onboarding
     if user and not profile_missing_for_flow(user):
-        # If session exists and is not onboarding, continue from last session
-        if sess and not (sess["stage"] or "").startswith("ask_"):
-            # Greet returning user if just opened chat
-            if update.message:
-                await update.message.reply_text(f"👋 Welcome back, {user.get('first_name','')}! Continuing your progress.")
-            # Resume lesson/quiz if session is active
-            if sess["stage"] == "lesson" and sess["lesson_id"]:
-                lesson = engine.load_lesson(sess["lesson_id"])
-                if lesson:
-                    return await send_quiz_question(update, wa_id, lesson, sess["q_index"])
-            # Otherwise, prompt for next action
-            if update.message:
-                await update.message.reply_text("Type START to begin a new lesson, or HELP for options.")
-            return
-        # If no session, prompt for next action
+        # Greet returning user if just opened chat
         if update.message:
-            await update.message.reply_text(f"👋 Welcome, {user.get('first_name','')}! Your profile is saved. Type START to begin or HELP for options.")
+            await update.message.reply_text(f"👋 Welcome back, {user.get('first_name','')}! Continuing your progress.")
+        # Resume lesson/quiz if session is active
+        if sess and sess["stage"] == "lesson" and sess["lesson_id"]:
+            lesson = engine.load_lesson(sess["lesson_id"])
+            if lesson:
+                return await send_quiz_question(update, wa_id, lesson, sess["q_index"])
+        # Otherwise, prompt for next action
+        if update.message:
+            await update.message.reply_text("Type START to begin a new lesson, or HELP for options.")
         return
 
     # ----------- Onboarding Flow -----------
-    if not user or (sess and (sess["stage"] or "").startswith("ask_")) or profile_missing_for_flow(user):
+    if not user or profile_missing_for_flow(user):
         stage = (sess["stage"] if sess else "ask_lang")
         # ...existing code...
         if stage == "ask_phone" or (user and not user.get("phone")):

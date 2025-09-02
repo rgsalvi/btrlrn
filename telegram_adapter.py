@@ -598,82 +598,68 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_te
     sess = rowdict(engine.get_session(wa_id))
     lang = get_lang(wa_id)
 
-    # ----------- Persistent Progress & Onboarding -----------
-    # If user profile is complete, always greet and continue, never run onboarding
-    if user and not profile_missing_for_flow(user):
-        # If user sends START, bypass greeting and generate lesson
-        if up == "START":
-            if update.message:
-                await update.message.reply_text(t("GENERATING", lang))
-            try:
-                level = user.get("level") if user and "level" in user else 1
-                trouble = engine.recent_trouble_concepts(wa_id, user.get("subject")) if user else None
-                raw_lesson = engine.ai_generate_lesson(
-                    board=user.get("board") if user else None,
-                    grade=user.get("grade") if user else None,
-                    subject_label=user.get("subject") if user else None,
-                    level=level,
-                    city=user.get("city") if user else None,
-                    state=user.get("state") if user else None,
-                    recent_mistakes=trouble,
-                    wa_id=wa_id
-                ) if user else None
-                lesson = translate_lesson_if_needed(raw_lesson, lang) if raw_lesson else None
-                lesson_id = engine.save_lesson(
-                    wa_id=wa_id,
-                    board=user.get("board") if user else None,
-                    grade=user.get("grade") if user else None,
-                    subject_label=user.get("subject") if user else None,
-                    level=level,
-                    title=lesson["title"] if lesson else None,
-                    intro=lesson["intro"] if lesson else None,
-                    questions=lesson["questions"] if lesson else None
-                ) if lesson else None
-                engine.set_session(wa_id, "lesson", 0, 0, lesson_id)
-                intro = "\n".join(lesson["intro"][:3]) if lesson and "intro" in lesson else ""
-                if update.message:
-                    return await update.message.reply_text(t("TOPIC", lang, title=lesson["title"] if lesson else "", level=level, intro=intro), parse_mode="Markdown")
-                return
-            except Exception as e:
-                logger.error(f"[TG] AI generation error: {e}")
-                if update.message:
-                    return await update.message.reply_text(t("AI_ERROR", lang))
-                return
-        # Resume lesson/quiz if session is active
-        if sess and sess["stage"] == "lesson" and sess["lesson_id"]:
-            lesson = engine.load_lesson(sess["lesson_id"])
-            if lesson:
-                return await send_quiz_question(update, wa_id, lesson, sess["q_index"])
-        # Otherwise, greet and prompt only if not a command
-        if update.message and up not in ("START", "HELP", "PROFILE", "RESET", "RANK", "STATS", "SUBJECT", "TOPIC", "QUIZ"):
-            await update.message.reply_text(f"👋 Welcome back, {user.get('first_name','')}! Continuing your progress.")
-            await update.message.reply_text("Type START to begin a new lesson, or HELP for options.")
-        return
-
-    # ----------- Onboarding Flow -----------
-    if not user or profile_missing_for_flow(user):
+    # ----------- Onboarding & Guard -----------
+    if not user or (sess and (sess["stage"] or "").startswith("ask_")) or profile_missing_for_flow(user):
         stage = (sess["stage"] if sess else "ask_lang")
-        # ...existing code...
-        if stage == "ask_phone" or (user and not user.get("phone")):
-            digits = re.sub(r"\D","", text or "") if text else ""
-            if digits:
-                if digits.startswith("91") and len(digits) == 12:
-                    digits = digits[2:]
-                if not valid_indian_mobile10(digits):
-                    kb = ReplyKeyboardMarkup([[KeyboardButton(t("PHONE_BTN", lang), request_contact=True)]], resize_keyboard=True, one_time_keyboard=True)
-                    if update.message:
-                        return await update.message.reply_text(t("PHONE_BAD", lang), reply_markup=kb)
-                    return
-                engine.upsert_user(wa_id, phone=digits)
-                engine.set_session(wa_id, "ask_city")
+
+        # Onboarding logic uses text, not up
+        if stage == "ask_lang":
+            engine.set_session(wa_id, "ask_lang")
+            if update.message:
+                return await update.message.reply_text(f"{t('WELCOME','en')}\n\n{t('LANG_PROMPT','en')}", reply_markup=kb_lang())
+            return
+
+        if stage == "ask_first" or (user and not user.get("first_name")):
+            if not text:
                 if update.message:
-                    return await update.message.reply_text(f"{step_header(lang, 5, 'CITY')}\n{t('ASK_CITY', lang)}", reply_markup=None)
+                    return await update.message.reply_text(f"{step_header(lang, 1, 'FIRST_NAME')}\n{t('ASK_FIRST', lang)}")
                 return
-            else:
+            engine.upsert_user(wa_id, first_name=text)
+            engine.set_session(wa_id, "ask_last")
+            if update.message:
+                return await update.message.reply_text(
+                    f"{step_header(lang, 2, 'LAST_NAME')}\n{t('ASK_LAST', lang, first=text)}"
+                )
+            return
+
+        if stage == "ask_last" or (user and not user.get("last_name")):
+            if not text:
+                first = (user or {}).get("first_name","")
+                if update.message:
+                    return await update.message.reply_text(f"{step_header(lang, 2, 'LAST_NAME')}\n{t('ASK_LAST', lang, first=first)}")
+                return
+            engine.upsert_user(wa_id, last_name=text)
+            engine.set_session(wa_id, "ask_dob")
+            if update.message:
+                return await update.message.reply_text(f"{step_header(lang, 3, 'DOB')}\n{t('ASK_DOB', lang)}")
+            return
+
+        if stage == "ask_dob" or (user and not user.get("dob")):
+            if not text or not valid_dob(text):
+                if update.message:
+                    return await update.message.reply_text(f"{step_header(lang, 3, 'DOB')}\n{t('DOB_BAD', lang)}")
+                return
+            engine.upsert_user(wa_id, dob=text)
+            engine.set_session(wa_id, "ask_phone")
+            kb = ReplyKeyboardMarkup([[KeyboardButton(t("PHONE_BTN", lang), request_contact=True)]], resize_keyboard=True, one_time_keyboard=True)
+            if update.message:
+                return await update.message.reply_text(f"{step_header(lang, 4, 'PHONE')}\n{t('ASK_PHONE', lang)}", reply_markup=kb)
+            return
+
+        if stage == "ask_phone" or (user and not user.get("phone")):
+            digits = re.sub(r"\D","", text or "")
+            if digits.startswith("91") and len(digits) == 12:
+                digits = digits[2:]
+            if not valid_indian_mobile10(digits):
                 kb = ReplyKeyboardMarkup([[KeyboardButton(t("PHONE_BTN", lang), request_contact=True)]], resize_keyboard=True, one_time_keyboard=True)
                 if update.message:
                     return await update.message.reply_text(t("PHONE_BAD", lang), reply_markup=kb)
                 return
+            engine.upsert_user(wa_id, phone=digits)
+            engine.set_session(wa_id, "ask_city")
+            if update.message:
+                return await update.message.reply_text(f"{step_header(lang, 5, 'CITY')}\n{t('ASK_CITY', lang)}", reply_markup=None)
+            return
 
         if stage == "ask_city" or (user and not user.get("city")):
             if not text:
@@ -988,8 +974,6 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_te
         if sess and "stage" in sess and sess["stage"] == "quiz":
             user = rowdict(engine.get_user(wa_id))
             reply = engine.process_ai_answer(user, sess, up)
-            # Update session to allow next question
-            engine.update_session(wa_id, stage="quiz")
             if update.message:
                 if "🎉" in reply:
                     return await update.message.reply_text(reply)
@@ -1075,11 +1059,6 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         if not sess or "lesson_id" not in sess or not sess["lesson_id"]:
             if query and getattr(query, 'edit_message_text', None):
                 return await query.edit_message_text(t("NO_LESSON", lang))
-            return
-        # Accept both 'quiz' and 'lesson' stages for next question
-        if sess["stage"] not in ("quiz", "lesson"):
-            if query and getattr(query, 'edit_message_text', None):
-                return await query.edit_message_text(t("SESSION_EXPIRED", lang))
             return
         lesson = engine.load_lesson(sess["lesson_id"])
         idx = sess["q_index"] if sess and "q_index" in sess else 0

@@ -272,7 +272,7 @@ CAT = {
         "RANK": "🏆 लीडरबोर्ड (MVP):\n1) तुम्ही — 3\n2) Student B — 2\n3) Student C — 1",
         "RESET_OK": "सत्र रीसेट. START लिहा.",
         "STATS_HEADER": "📈 अलीकडील क्विझ:",
-        "STATS_EMPTY": "अजून क्विझ नाही. START लिहा!",
+        "STATS_EMPTY": "अजून क्विज नाही. START लिहा!",
     },
 }
 
@@ -1287,6 +1287,75 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
     if query:
         return await query.answer("OK")
+
+# Helper for START command logic
+async def _handle_start_command(wa_id: str, lang: str, update: Update, ctx: ContextTypes.DEFAULT_TYPE, is_callback_query: bool):
+    if is_callback_query:
+        query = update.callback_query
+        if not query: return
+        await query.answer(t("GENERATING", lang))
+    else:
+        if update.message:
+            await update.message.reply_text(t("GENERATING", lang))
+    try:
+        user = rowdict(engine.get_user(wa_id))
+        if not user:
+            if is_callback_query and query:
+                return await query.edit_message_text("Profile not found. Please restart.")
+            elif update.message:
+                return await update.message.reply_text("Profile not found. Please restart.")
+            return
+
+        level = user.get("level") if user and "level" in user else 1
+        subject = user.get("subject") if user else None
+        trouble = engine.recent_trouble_concepts(wa_id, subject) if user else None
+        raw_lesson = engine.ai_generate_lesson(
+            board=user.get("board") if user else None,
+            grade=user.get("grade") if user else None,
+            subject_label=subject,
+            level=level,
+            city=user.get("city") if user else None,
+            state=user.get("state") if user else None,
+            recent_mistakes=trouble,
+            wa_id=wa_id
+        ) if user else None
+
+        if not raw_lesson:
+            if is_callback_query and query:
+                return await query.edit_message_text("Could not generate lesson. Please try again.")
+            elif update.message:
+                return await update.message.reply_text("Could not generate lesson. Please try again.")
+            return
+
+        lesson = translate_lesson_if_needed(raw_lesson, lang) if raw_lesson else None
+        lesson_id = engine.save_lesson(
+            wa_id=wa_id,
+            board=user.get("board") if user else None,
+            grade=user.get("grade") if user else None,
+            subject_label=subject,
+            level=level,
+            title=lesson["title"] if lesson else None,
+            intro=lesson["intro"] if lesson else None,
+            questions=lesson["questions"] if lesson else None
+        ) if lesson else None
+        engine.set_session(wa_id, "lesson", 0, 0, lesson_id)
+        intro = "\n".join(lesson["intro"][:3]) if lesson and "intro" in lesson else ""
+
+        if is_callback_query and query:
+            return await query.edit_message_text(
+                t("TOPIC", lang, title=lesson["title"] if lesson else "", level=level, intro=intro),
+                parse_mode="Markdown"
+            )
+        elif update.message:
+            return await update.message.reply_text(t("TOPIC", lang, title=lesson["title"] if lesson else "", level=level, intro=intro), parse_mode="Markdown")
+        return
+    except Exception as e:
+        logger.error(f"[TG] AI generation error: {e}")
+        if is_callback_query and query:
+            return await query.edit_message_text(t("AI_ERROR", lang))
+        elif update.message:
+            return await update.message.reply_text(t("AI_ERROR", lang))
+        return
 
 # ---------- Launcher (Windows-friendly + tolerant HTTP client) ----------
 if __name__ == "__main__":

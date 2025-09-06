@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Btrlrn — Better Learning, Every Day</title>
+  <!-- Tailwind (CDN for MVP). For production, compile a custom build. -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              teal: '#004F57',
+              light: '#E6F7F8',
+              yellow: '#FFD33D'
+            }
+          },
+          fontFamily: {
+            sans: ["Poppins", "ui-sans-serif", "system-ui", "-apple-system", "Segoe UI", "Roboto", "Inter", "Noto Sans", "sans-serif"]
+          },
+          boxShadow: {
+            soft: '0 10px 25px rgba(0,0,0,0.06)'
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="font-sans text-brand-teal bg-white">
+  <!-- Header / Hero -->
+  <header class="relative overflow-hidden">
+    <div class="absolute inset-0 bg-brand-light/70 -z-10"></div>
+    <div class="max-w-7xl mx-auto px-6 lg:px-8 py-12 lg:py-20">
+      <div class="flex flex-col-reverse lg:flex-row items-center gap-10">
+        <div class="w-full lg:w-3/5">
+          <div class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 shadow-soft border border-brand-light">
+            <span class="h-2 w-2 rounded-full bg-brand-teal"></span>
+            <span class="text-sm text-brand-teal/80">AI-powered daily learning companion</span>
+          </div>
+          <h1 class="mt-6 text-4xl lg:text-5xl font-bold tracking-tight">Better Learning, Every Day</h1>
+          <p class="mt-4 text-lg text-brand-teal/80">Btrlrn helps school students learn at their own pace with bite‑sized topics, adaptive quizzes, and friendly rewards — designed to reassure parents and delight children.</p>
+          <div class="mt-8 flex flex-col sm:flex-row items-center gap-4">
+            <a href="https://t.me/btrlrnbot" class="inline-flex items-center justify-center rounded-full bg-brand-yellow px-6 py-3 font-semibold text-brand-teal hover:brightness-95 transition">Start Learning on Telegram</a>
+            <a href="#why-telegram" class="text-brand-teal/80 hover:text-brand-teal font-semibold">Why Telegram?</a>
+          </div>
+        </div>
+        <div class="w-full lg:w-2/5 flex items-center justify-center">
+          <img src="btrlrn_logo.png" alt="Btrlrn AI Owl logo" class="w-40 h-40 lg:w-56 lg:h-56 drop-shadow" />
+        </div>
+      </div>
+
+      <!-- QR -->
+      <div class="mt-10 sm:mt-14 grid sm:grid-cols-[auto,1fr] gap-6 items-center bg-white/70 rounded-2xl p-6 border border-brand-light shadow-soft">
+        <img src="btrlrn_qr.png" alt="Scan to join Btrlrn on Telegram" class="w-40 h-40 mx-auto sm:mx-0 rounded-xl border border-brand-light" />
+        <div>
+          <h2 class="text-2xl font-semibold">Join in two taps</h2>
+          <p class="mt-2 text-brand-teal/80">Scan this QR with your phone’s camera or tap the button to open the Btrlrn bot in Telegram.</p>
+          <div class="mt-4">
+            <a href="https://t.me/btrlrnbot" class="inline-flex items-center justify-center rounded-full bg-brand-teal px-5 py-3 font-semibold text-white hover:opacity-90 transition">Open @btrlrnbot</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Why Telegram note placed under joins, as requested -->
+      <p id="why-telegram" class="mt-4 text-sm text-brand-teal/80">⚑ <span class="font-semibold">Why Telegram?</span> Unlike WhatsApp, Telegram does not expose your phone number to us unless you choose to share it — an extra privacy layer that makes Btrlrn safer for children.</p>
+    </div>
+  </header>
+
+  <!-- How it works -->
+  <section class="py-12 lg:py-16">
+    <div class="max-w-7xl mx-auto px-6 lg:px-8">
+      <h2 class="text-3xl font-bold text-center">How It Works</h2>
+      <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="bg-white rounded-2xl p-6 border border-brand-light shadow-soft">
+          <div class="text-2xl font-semibold">1. Onboard</div>
+          <p class="mt-2 text-brand-teal/80">Simple, child‑friendly setup: language, name, grade, and curriculum. Parents stay in control.</p>
+        </div>
+        <div class="bg-white rounded-2xl p-6 border border-brand-light shadow-soft">
+          <div class="text-2xl font-semibold">2. Learn Daily</div>
+          <p class="mt-2 text-brand-teal/80">One topic with an adaptive quiz at the child’s chosen time — no pressure, just progress.</p>
+        </div>
+        <div class="bg-white rounded-2xl p-6 border border-brand-light shadow-soft">
+          <div class="text-2xl font-semibold">3. Rewards</div>
+          <p class="mt-2 text-brand-teal/80">Daily streaks, weekly prizes, and scholarships to keep motivation high.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- For Parents -->
+  <section class="py-12 lg:py-16 bg-brand-light/50">
+    <div class="max-w-7xl mx-auto px-6 lg:px-8">
+      <h2 class="text-3xl font-bold text-center">Made for Parents</h2>
+      <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="bg-white rounded-2xl p-6 border border-brand-light shadow-soft">
+          <h3 class="text-xl font-semibold">Safe & Private</h3>
+          <p class="mt-2 text-brand-teal/80">No spam, no data sharing. Clear controls and contact options for parents.</p>
+        </div>
+        <div class="bg-white rounded-2xl p-6 border border-brand-light shadow-soft">
+          <h3 class="text-xl font-semibold">Affordable</h3>
+          <p class="mt-2 text-brand-teal/80">Free to start. Scholarships funded by CSR and partners reduce costs for families.</p>
+        </div>
+        <div class="bg-white rounded-2xl p-6 border border-brand-light shadow-soft">
+          <h3 class="text-xl font-semibold">Adaptive</h3>
+          <p class="mt-2 text-brand-teal/80">Every child learns at their own pace with AI‑guided steps and supportive feedback.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Why Btrlrn -->
+  <section class="py-12 lg:py-16">
+    <div class="max-w-7xl mx-auto px-6 lg:px-8">
+      <h2 class="text-3xl font-bold text-center">Why Btrlrn?</h2>
+      <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="bg-white rounded-2xl p-6 border border-brand-light shadow-soft">
+          <h3 class="text-xl font-semibold">AI‑First</h3>
+          <p class="mt-2 text-brand-teal/80">Adaptive lessons and quizzes powered by state‑of‑the‑art AI models.</p>
+        </div>
+        <div class="bg-white rounded-2xl p-6 border border-brand-light shadow-soft">
+          <h3 class="text-xl font-semibold">Multi‑Language</h3>
+          <p class="mt-2 text-brand-teal/80">Children learn in the language they’re most comfortable with.</p>
+        </div>
+        <div class="bg-white rounded-2xl p-6 border border-brand-light shadow-soft">
+          <h3 class="text-xl font-semibold">Engagement</h3>
+          <p class="mt-2 text-brand-teal/80">Streaks, badges, and rewards keep learning joyful and consistent.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-brand-teal text-white">
+    <div class="max-w-7xl mx-auto px-6 lg:px-8 py-10 text-center">
+      <p>Contact us: <a class="underline decoration-brand-yellow/60 hover:decoration-brand-yellow" href="mailto:support@btrlrn.life">support@btrlrn.life</a></p>
+      <p class="mt-2 text-white/80">© 2025 Btrlrn. All rights reserved.</p>
+    </div>
+  </footer>
+</body>
+</html>

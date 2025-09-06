@@ -42,50 +42,108 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* Floating animation for watermark images */
+    .float-anim {
+      animation: floatY 4s ease-in-out infinite;
+    }
+    @keyframes floatY {
+      0% { transform: translateY(0); }
+      50% { transform: translateY(-18px); }
+      100% { transform: translateY(0); }
+    }
+    /* Swinging animation for swinging girl */
+    .swing-anim {
+      transform-origin: 80% 10%;
+      animation: swingGirl 3.5s cubic-bezier(.36,.07,.19,.97) infinite alternate;
+    }
+    @keyframes swingGirl {
+      0% { transform: rotate(-10deg); }
+      50% { transform: rotate(8deg); }
+      100% { transform: rotate(-10deg); }
+    }
+
+    /* Section fade/slide-in animation */
+    .section-animate {
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity 0.9s cubic-bezier(.4,0,.2,1), transform 0.9s cubic-bezier(.4,0,.2,1);
+    }
+    .section-animate.visible {
+      opacity: 1;
+      transform: none;
+    }
+  </style>
 </head>
-<body class="font-sans text-brand-teal bg-white">
+  <body class="font-sans text-brand-teal bg-gradient-to-br from-white via-brand-light/60 to-white min-h-screen">
   <!-- Sticky Header -->
   <header class="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-brand-light shadow-sm">
     <div class="max-w-7xl mx-auto flex items-center justify-between px-6 lg:px-8 py-3">
       <div class="flex items-center gap-4">
-        <img src="btrlrn_logo_symbol.png" alt="btrlrn logo" class="w-16 h-16 drop-shadow-lg rounded-full border-2 border-brand-teal bg-white p-1" />
+        <a href="index.html">
+          <img src="btrlrn_logo_symbol.png" alt="btrlrn logo" class="w-16 h-16 drop-shadow-lg rounded-full border-2 border-brand-teal bg-white p-1" />
+        </a>
         <span class="text-3xl lg:text-4xl font-extrabold text-brand-teal tracking-tight drop-shadow-sm" style="letter-spacing:-1px;">btrlrn</span>
       </div>
       <nav class="hidden md:flex gap-8 text-brand-teal font-semibold text-base">
-        <a href="#how-it-works" class="hover:text-brand-yellow transition">How it works</a>
+  <a href="#how-it-works" class="hover:text-brand-yellow transition">How It Works</a>
         <a href="#for-parents" class="hover:text-brand-yellow transition">For Parents</a>
+        <a href="#testimonials" class="hover:text-brand-yellow transition">Testimonials</a>
+  <a href="#faqs" class="hover:text-brand-yellow transition">FAQs</a>
         <a href="#contact" class="hover:text-brand-yellow transition">Contact</a>
       </nav>
     </div>
   </header>
 
   <!-- Hero Section -->
-  <section class="relative overflow-hidden bg-brand-light/60 pt-10 pb-16 lg:pt-20 lg:pb-24">
-    <div class="absolute inset-0 bg-gradient-to-br from-brand-light/80 to-white/60 -z-10"></div>
-    <div class="max-w-7xl mx-auto px-6 lg:px-8 flex flex-col items-center lg:flex-row gap-12 lg:gap-20">
-      <div class="flex flex-col lg:flex-row items-center w-full">
-        <div class="flex-shrink-0 flex items-center justify-center mb-6 lg:mb-0 lg:mr-10">
-          <img src="btrlrn_logo.png" alt="btrlrn AI Owl logo" class="w-56 lg:w-80 h-auto drop-shadow-2xl border-4 border-brand-teal bg-white p-2" style="border-radius:1.5rem;" />
-        </div>
-        <div class="flex-1 flex flex-col items-start">
-          <div class="flex items-center gap-3 mb-4">
-            <span class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 shadow-soft border border-brand-light text-sm text-brand-teal/90 font-semibold"><span class="h-2 w-2 rounded-full bg-green-600"></span>100% Free. Always.</span>
-            <span class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 shadow-soft border border-brand-light text-sm text-brand-teal/80"><span class="h-2 w-2 rounded-full bg-brand-teal"></span>AI-powered daily learning companion</span>
+  <section class="relative overflow-hidden bg-gradient-to-br from-brand-light/80 to-white/60 pt-14 pb-20 lg:pt-24 lg:pb-32 section-animate">
+    <div class="max-w-screen-xl mx-auto px-4 sm:px-8">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+  <!-- Left Card: Text Content Only -->
+  <div class="bg-white/95 rounded-3xl border border-brand-light shadow-soft p-8 flex flex-col">
+          <div class="flex flex-col items-center">
+            <img src="reading.png" alt="Child reading illustration" class="w-48 h-auto md:w-56 mb-6" />
+            <div class="flex flex-wrap items-center gap-4 mb-6 justify-center">
+              <span class="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2 shadow-soft border border-brand-light text-base text-brand-teal/90 font-semibold"><span class="h-3 w-3 rounded-full bg-green-600"></span>100% Free. Always.</span>
+              <span class="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2 shadow-soft border border-brand-light text-base text-brand-teal/80"><span class="h-3 w-3 rounded-full bg-brand-teal"></span>AI-powered daily learning companion</span>
+            </div>
           </div>
-          <h1 class="text-4xl lg:text-5xl font-bold tracking-tight text-brand-teal">Adaptive, AI-Driven Learning — At Your Child’s Pace</h1>
-          <p class="mt-4 text-lg text-brand-teal/80">btrlrn uses advanced AI to personalize every child’s learning journey, adapting to their pace and style. No pressure, just progress — so every child can thrive and build confidence, one step at a time.</p>
-          <div class="mt-6 bg-white/90 border border-brand-light rounded-xl p-4 shadow-soft w-full max-w-xl">
-            <p class="text-brand-teal text-base font-semibold text-center">Our mission: <span class="font-bold">Make world-class learning accessible and free for every child.</span> No fees. No catch.</p>
+          <h1 class="text-5xl lg:text-6xl font-extrabold tracking-tight text-brand-teal leading-tight text-center">Adaptive, AI-Driven Learning<br class="hidden md:block" />At Your Child’s Pace</h1>
+          <p class="mt-6 text-2xl text-brand-teal/80 text-center">btrlrn uses advanced AI to personalize every child’s learning journey, adapting to their pace and style. No pressure, just progress — so every child can thrive and build confidence, one step at a time.</p>
+        </div>
+        <!-- Right Card: Rewards/Prizes/Scholarships (matches left card design) -->
+  <div class="bg-white/95 rounded-3xl border border-brand-light shadow-soft p-8 flex flex-col">
+          <div class="flex flex-col items-start">
+            <div class="flex flex-col items-center w-full">
+              <img src="ice-cream.png" alt="Ice cream prize illustration" class="w-48 h-auto md:w-56 mb-6" />
+              <div class="flex flex-wrap items-center gap-4 mb-6 justify-center">
+                <span class="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2 shadow-soft border border-brand-light text-base text-brand-teal/90 font-semibold"><span class="h-3 w-3 rounded-full bg-green-600"></span>No fees. No catch. Just progress!</span>
+                <span class="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2 shadow-soft border border-brand-light text-base text-brand-teal/80"><span class="h-3 w-3 rounded-full bg-brand-teal"></span>Incredible daily, weekly and monthly prizes for everyone</span>
+              </div>
+            </div>
+            <h2 class="text-5xl lg:text-6xl font-extrabold tracking-tight text-brand-teal leading-tight mb-2 text-center">1,000 Fully Paid Annual Scholarships Up For Grabs!</h2>
+            <p class="mt-6 text-2xl text-brand-teal/80 text-center">btrlrn gives real rewards for progress. More your child wins in syllabus-based quizzes, higher they climb the annual leaderboard and win fully paid scholarships covering fees, uniforms, and books.</p>
           </div>
         </div>
+      </div>
+      <!-- Mission Statement Card (Full Width, below hero cards) -->
+      <div class="mt-10 relative flex justify-center">
+  <div class="rounded-2xl shadow-soft border border-brand-light p-6 text-center bg-white/95 relative z-10 w-full mb-4 md:mb-6 lg:mb-8">
+          <p class="text-brand-teal text-lg font-semibold">Our mission: <span class="font-bold">Make world-class learning accessible and free for every child.</span> No fees. No catch.</p>
+        </div>
+        <img 
+          src="swinging.png" 
+          alt="Girl swinging off card" 
+          class="absolute w-32 md:w-40 lg:w-48 h-auto z-20 drop-shadow-xl pointer-events-none select-none left-0 bottom-[-3.5rem] md:bottom-[-4.5rem] lg:bottom-[-5.5rem] swing-anim"
+        />
       </div>
     </div>
   </section>
 
       <!-- QR & Why Telegram side-by-side on large screens -->
-      <div class="mt-10 sm:mt-14 grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-5xl mx-auto">
+      <div class="mt-14 grid grid-cols-1 lg:grid-cols-2 gap-10 max-w-5xl mx-auto">
         <!-- Left: QR & Join Info (horizontal layout) -->
-        <div class="bg-white/70 rounded-2xl p-4 border border-brand-light shadow-soft flex flex-row items-center justify-center h-full max-w-xl mx-auto">
+        <div class="bg-white/80 rounded-3xl p-6 border border-brand-light shadow-lg flex flex-row items-center justify-center h-full max-w-xl mx-auto transition-transform hover:scale-[1.025]">
           <img src="btrlrn_qr.png" alt="Scan to join btrlrn on Telegram" class="w-28 h-auto rounded-xl border border-brand-light flex-shrink-0" />
           <div class="ml-6 flex flex-col justify-center">
             <h2 class="text-xl font-semibold">Start learning on Telegram now!</h2>
@@ -96,7 +154,7 @@
           </div>
         </div>
         <!-- Right: Why Telegram (smaller box) -->
-        <div id="why-telegram" class="bg-brand-light p-4 rounded-2xl border-2 border-brand-teal flex items-center gap-3 shadow-soft h-full max-w-xl mx-auto">
+        <div id="why-telegram" class="bg-brand-light/80 p-6 rounded-3xl border-2 border-brand-teal flex items-center gap-4 shadow-lg h-full max-w-xl mx-auto transition-transform hover:scale-[1.025]">
           <span class="text-2xl">🔒</span>
           <div>
             <span class="block text-lg font-bold text-brand-teal">Why Telegram?</span>
@@ -107,12 +165,18 @@
     </div>
   </header>
 
+
   <!-- How it works -->
-  <section id="how-it-works" class="py-12 lg:py-16">
+  <section id="how-it-works" class="py-20 lg:py-28 section-animate">
     <div class="max-w-7xl mx-auto px-6 lg:px-8">
-      <h2 class="text-3xl font-bold text-center">How It Works</h2>
-      <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        <div class="bg-white rounded-2xl p-6 border border-brand-light shadow-soft">
+      <div class="relative flex justify-center items-center mb-2">
+        <span class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none opacity-20 z-0">
+          <img src="laying.png" alt="Decorative watermark" class="w-64 md:w-80 lg:w-96 h-auto float-anim" />
+        </span>
+        <h2 class="text-3xl font-bold text-center relative z-10">How It Works</h2>
+      </div>
+  <div class="mt-14 grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
+  <div class="bg-white/90 rounded-3xl p-8 border border-brand-light shadow-lg transition-transform hover:scale-[1.03]">
           <div class="text-2xl font-semibold">1. Onboard</div>
           <p class="mt-2 text-brand-teal/80">Simple, child‑friendly setup: language, name, grade, and curriculum. Parents stay in control.</p>
         </div>
@@ -129,11 +193,16 @@
   </section>
 
   <!-- For Parents -->
-  <section id="for-parents" class="py-12 lg:py-16 bg-brand-light/50">
+  <section id="for-parents" class="py-20 lg:py-28 bg-brand-light/60 section-animate">
     <div class="max-w-7xl mx-auto px-6 lg:px-8">
-      <h2 class="text-3xl font-bold text-center">Made for Parents</h2>
-      <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        <div class="bg-white rounded-2xl p-6 border border-brand-light shadow-soft">
+      <div class="relative flex justify-center items-center mb-2">
+        <span class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none opacity-20 z-0">
+          <img src="meditating.png" alt="Decorative watermark" class="w-64 md:w-80 lg:w-96 h-auto float-anim" />
+        </span>
+        <h2 class="text-3xl font-bold text-center relative z-10">Made for Parents</h2>
+      </div>
+  <div class="mt-14 grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
+  <div class="bg-white/90 rounded-3xl p-8 border border-brand-light shadow-lg transition-transform hover:scale-[1.03]">
           <h3 class="text-xl font-semibold">Safe & Private</h3>
           <p class="mt-2 text-brand-teal/80">No spam, no data sharing. Clear controls and contact options for parents.</p>
         </div>
@@ -150,22 +219,101 @@
   </section>
 
   <!-- Why btrlrn -->
-  <section class="py-12 lg:py-16">
+  <section class="py-20 lg:py-28 section-animate">
     <div class="max-w-7xl mx-auto px-6 lg:px-8">
-  <h2 class="text-3xl font-bold text-center">Why btrlrn?</h2>
-      <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        <div class="bg-white rounded-2xl p-6 border border-brand-light shadow-soft">
+      <div class="relative flex justify-center items-center mb-2">
+        <span class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none opacity-20 z-0">
+          <img src="zombieing.png" alt="Decorative watermark" class="w-64 md:w-80 lg:w-96 h-auto float-anim" />
+        </span>
+        <h2 class="text-3xl font-bold text-center relative z-10">Why btrlrn?</h2>
+      </div>
+      <div class="mt-14 grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="bg-white/90 rounded-3xl p-8 border border-brand-light shadow-lg transition-transform hover:scale-[1.03]">
           <h3 class="text-xl font-semibold">AI‑Driven & Child-Centered</h3>
           <p class="mt-2 text-brand-teal/80">btrlrn’s AI tailors every lesson and quiz to your child’s pace, ensuring learning is always supportive, never stressful.</p>
         </div>
-        <div class="bg-white rounded-2xl p-6 border border-brand-light shadow-soft">
+        <div class="bg-white/90 rounded-3xl p-8 border border-brand-light shadow-lg transition-transform hover:scale-[1.03]">
           <h3 class="text-xl font-semibold">Multi‑Language</h3>
           <p class="mt-2 text-brand-teal/80">Children learn in the language they’re most comfortable with.</p>
         </div>
-        <div class="bg-white rounded-2xl p-6 border border-brand-light shadow-soft">
+        <div class="bg-white/90 rounded-3xl p-8 border border-brand-light shadow-lg transition-transform hover:scale-[1.03]">
           <h3 class="text-xl font-semibold">Engagement</h3>
           <p class="mt-2 text-brand-teal/80">Streaks, badges, and rewards keep learning joyful and consistent.</p>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonials Section -->
+  <section id="testimonials" class="py-20 lg:py-28 bg-brand-light/60 border-t border-brand-light section-animate">
+    <div class="max-w-5xl mx-auto px-4 sm:px-8">
+      <div class="relative flex justify-center items-center mb-10">
+        <span class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none opacity-20 z-0">
+          <img src="loving.png" alt="Decorative watermark" class="w-64 md:w-80 lg:w-96 h-auto float-anim" />
+        </span>
+        <h2 class="text-3xl font-bold text-center relative z-10 text-brand-teal">What Parents Say</h2>
+      </div>
+      <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+        <div class="relative bg-white rounded-3xl p-8 border-2 border-brand-light shadow-lg flex flex-col items-center text-center transition-transform hover:scale-[1.03]">
+          <div class="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-2 rounded-b-xl bg-brand-yellow"></div>
+          <p class="text-lg text-brand-teal font-semibold mt-4">“btrlrn has made my child excited to learn every day. The adaptive approach means there’s never any pressure.”</p>
+          <span class="block mt-4 text-brand-teal/70 font-medium">— Priya S., Pune</span>
+        </div>
+        <div class="relative bg-white rounded-3xl p-8 border-2 border-brand-light shadow-lg flex flex-col items-center text-center transition-transform hover:scale-[1.03]">
+          <div class="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-2 rounded-b-xl bg-brand-yellow"></div>
+          <p class="text-lg text-brand-teal font-semibold mt-4">“I love that btrlrn is free and safe. The AI really understands my daughter’s pace.”</p>
+          <span class="block mt-4 text-brand-teal/70 font-medium">— Rahul M., Mumbai</span>
+        </div>
+        <div class="relative bg-white rounded-3xl p-8 border-2 border-brand-light shadow-lg flex flex-col items-center text-center transition-transform hover:scale-[1.03]">
+          <div class="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-2 rounded-b-xl bg-brand-yellow"></div>
+          <p class="text-lg text-brand-teal font-semibold mt-4">“The weekly prizes and rewards keep my son motivated to learn every day. It’s fun for him and easy for me to keep him engaged!”</p>
+          <span class="block mt-4 text-brand-teal/70 font-medium">— Sunita D., Bengaluru</span>
+        </div>
+        <div class="relative bg-white rounded-3xl p-8 border-2 border-brand-light shadow-lg flex flex-col items-center text-center transition-transform hover:scale-[1.03]">
+          <div class="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-2 rounded-b-xl bg-brand-yellow"></div>
+          <p class="text-lg text-brand-teal font-semibold mt-4">“btrlrn’s prizes are a great way to keep my daughter excited about learning. She looks forward to her daily streaks!”</p>
+          <span class="block mt-4 text-brand-teal/70 font-medium">— Amit K., Hyderabad</span>
+        </div>
+        <div class="relative bg-white rounded-3xl p-8 border-2 border-brand-light shadow-lg flex flex-col items-center text-center transition-transform hover:scale-[1.03]">
+          <div class="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-2 rounded-b-xl bg-brand-yellow"></div>
+          <p class="text-lg text-brand-teal font-semibold mt-4">“My son struggled with maths, but btrlrn’s adaptive lessons helped him finally understand the tough topics. His confidence has grown so much.”</p>
+          <span class="block mt-4 text-brand-teal/70 font-medium">— Vikram S., Delhi</span>
+        </div>
+        <div class="relative bg-white rounded-3xl p-8 border-2 border-brand-light shadow-lg flex flex-col items-center text-center transition-transform hover:scale-[1.03]">
+          <div class="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-2 rounded-b-xl bg-brand-yellow"></div>
+          <p class="text-lg text-brand-teal font-semibold mt-4">“btrlrn has helped my daughter improve in science and English. The lessons are easy to follow and she’s not afraid of difficult subjects anymore.”</p>
+          <span class="block mt-4 text-brand-teal/70 font-medium">— Meena P., Chennai</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQs Section -->
+  <section id="faqs" class="py-20 lg:py-28 border-t border-brand-light section-animate">
+    <div class="max-w-5xl mx-auto px-4 sm:px-8">
+      <div class="relative flex justify-center items-center mb-10">
+        <span class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none opacity-20 z-0">
+          <img src="clumsy.png" alt="Decorative watermark" class="w-64 md:w-80 lg:w-96 h-auto float-anim" />
+        </span>
+        <h2 class="text-3xl font-bold text-center relative z-10 text-brand-teal">FAQs for Parents</h2>
+      </div>
+      <div class="grid gap-6">
+        <details class="bg-white/90 rounded-2xl border border-brand-light shadow-soft p-6 group">
+          <summary class="font-semibold text-brand-teal text-lg cursor-pointer group-open:text-brand-yellow transition">Is btrlrn really free?</summary>
+          <p class="mt-2 text-brand-teal/80">Yes! btrlrn is 100% free for all learners. There are no hidden fees or charges.</p>
+        </details>
+        <details class="bg-white/90 rounded-2xl border border-brand-light shadow-soft p-6 group">
+          <summary class="font-semibold text-brand-teal text-lg cursor-pointer group-open:text-brand-yellow transition">How does btrlrn keep my child safe?</summary>
+          <p class="mt-2 text-brand-teal/80">We never share your data, and children’s phone numbers are private by default. Parents are always in control.</p>
+        </details>
+        <details class="bg-white/90 rounded-2xl border border-brand-light shadow-soft p-6 group">
+          <summary class="font-semibold text-brand-teal text-lg cursor-pointer group-open:text-brand-yellow transition">What makes btrlrn different?</summary>
+          <p class="mt-2 text-brand-teal/80">Our AI adapts to each child’s pace, making learning joyful and stress-free. We focus on confidence and progress, not pressure.</p>
+        </details>
+        <details class="bg-white/90 rounded-2xl border border-brand-light shadow-soft p-6 group">
+          <summary class="font-semibold text-brand-teal text-lg cursor-pointer group-open:text-brand-yellow transition">Does btrlrn follow the approved syllabus for my child’s school?</summary>
+          <p class="mt-2 text-brand-teal/80">Yes! btrlrn’s content is mapped to the latest CBSE, ICSE, and State board syllabuses. We ensure your child learns topics that match their school curriculum, so they’re always on track.</p>
+        </details>
       </div>
     </div>
   </section>
@@ -187,8 +335,32 @@
     <span class="font-semibold text-white">© 2025 Gilded Technologies Pvt Ltd</span>
     <span>CIN: U72900PN2021PTC206389 &nbsp;|&nbsp; GSTIN: 27AAJCG4298C1ZF</span>
     <span class="text-xs mt-1">All rights reserved.</span>
+    <div class="flex flex-wrap gap-4 mt-2">
+      <a href="privacy.html" class="underline decoration-brand-yellow/60 hover:decoration-brand-yellow text-white">Privacy Policy</a>
+      <a href="terms.html" class="underline decoration-brand-yellow/60 hover:decoration-brand-yellow text-white">Terms of Service</a>
+      <a href="child-safety.html" class="underline decoration-brand-yellow/60 hover:decoration-brand-yellow text-white">Child Safety Policy</a>
+    </div>
   </div>
     </div>
   </footer>
+  <script>
+    // Intersection Observer for section fade/slide-in
+    document.addEventListener('DOMContentLoaded', function() {
+      const sections = document.querySelectorAll('.section-animate');
+      const observer = new window.IntersectionObserver((entries, obs) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            obs.unobserve(entry.target);
+          }
+        });
+      }, {
+        threshold: 0.18
+      });
+      sections.forEach(section => {
+        observer.observe(section);
+      });
+    });
+  </script>
 </body>
 </html>

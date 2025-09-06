@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Btrlrn — Better Learning, Every Day</title>
+  <title>btrlrn — Better Learning, Every Day</title>
   <!-- Tailwind (CDN for MVP). For production, compile a custom build. -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -43,31 +43,36 @@
             <span class="text-sm text-brand-teal/80">AI-powered daily learning companion</span>
           </div>
           <h1 class="mt-6 text-4xl lg:text-5xl font-bold tracking-tight">Better Learning, Every Day</h1>
-          <p class="mt-4 text-lg text-brand-teal/80">Btrlrn helps school students learn at their own pace with bite‑sized topics, adaptive quizzes, and friendly rewards — designed to reassure parents and delight children.</p>
-          <div class="mt-8 flex flex-col sm:flex-row items-center gap-4">
-            <a href="https://t.me/btrlrnbot" class="inline-flex items-center justify-center rounded-full bg-brand-yellow px-6 py-3 font-semibold text-brand-teal hover:brightness-95 transition">Start Learning on Telegram</a>
-            <a href="#why-telegram" class="text-brand-teal/80 hover:text-brand-teal font-semibold">Why Telegram?</a>
-          </div>
+          <p class="mt-4 text-lg text-brand-teal/80">btrlrn helps school students learn at their own pace with bite‑sized topics, adaptive quizzes, and friendly rewards — designed to reassure parents and delight children.</p>
+          <!-- Removed Start Learning on Telegram button and Why Telegram link -->
         </div>
         <div class="w-full lg:w-2/5 flex items-center justify-center">
-          <img src="btrlrn_logo.png" alt="Btrlrn AI Owl logo" class="w-40 h-40 lg:w-56 lg:h-56 drop-shadow" />
+          <img src="btrlrn_logo.png" alt="btrlrn AI Owl logo" class="w-56 lg:w-80 h-auto drop-shadow" />
         </div>
       </div>
 
-      <!-- QR -->
-      <div class="mt-10 sm:mt-14 grid sm:grid-cols-[auto,1fr] gap-6 items-center bg-white/70 rounded-2xl p-6 border border-brand-light shadow-soft">
-        <img src="btrlrn_qr.png" alt="Scan to join Btrlrn on Telegram" class="w-40 h-40 mx-auto sm:mx-0 rounded-xl border border-brand-light" />
-        <div>
-          <h2 class="text-2xl font-semibold">Join in two taps</h2>
-          <p class="mt-2 text-brand-teal/80">Scan this QR with your phone’s camera or tap the button to open the Btrlrn bot in Telegram.</p>
-          <div class="mt-4">
-            <a href="https://t.me/btrlrnbot" class="inline-flex items-center justify-center rounded-full bg-brand-teal px-5 py-3 font-semibold text-white hover:opacity-90 transition">Open @btrlrnbot</a>
+      <!-- QR & Why Telegram side-by-side on large screens -->
+      <div class="mt-10 sm:mt-14 grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-5xl mx-auto">
+        <!-- Left: QR & Join Info (horizontal layout) -->
+        <div class="bg-white/70 rounded-2xl p-4 border border-brand-light shadow-soft flex flex-row items-center justify-center h-full max-w-xl mx-auto">
+          <img src="btrlrn_qr.png" alt="Scan to join btrlrn on Telegram" class="w-28 h-auto rounded-xl border border-brand-light flex-shrink-0" />
+          <div class="ml-6 flex flex-col justify-center">
+            <h2 class="text-xl font-semibold">Start learning on Telegram now!</h2>
+            <p class="mt-1 text-brand-teal/80">Scan this QR with your phone’s camera or tap the button to open the btrlrn bot in Telegram.</p>
+            <div class="mt-3">
+              <a href="https://t.me/btrlrnbot" class="inline-flex items-center justify-center rounded-full bg-brand-teal px-4 py-2 font-semibold text-white hover:opacity-90 transition text-sm">Open @btrlrnbot</a>
+            </div>
+          </div>
+        </div>
+        <!-- Right: Why Telegram (smaller box) -->
+        <div id="why-telegram" class="bg-brand-light p-4 rounded-2xl border-2 border-brand-teal flex items-center gap-3 shadow-soft h-full max-w-xl mx-auto">
+          <span class="text-2xl">🔒</span>
+          <div>
+            <span class="block text-lg font-bold text-brand-teal">Why Telegram?</span>
+            <span class="block mt-1 text-base text-brand-teal font-semibold">Unlike WhatsApp, Telegram does not expose your phone number to us unless you choose to share it — an extra privacy layer that makes btrlrn safer for children.</span>
           </div>
         </div>
       </div>
-
-      <!-- Why Telegram note placed under joins, as requested -->
-      <p id="why-telegram" class="mt-4 text-sm text-brand-teal/80">⚑ <span class="font-semibold">Why Telegram?</span> Unlike WhatsApp, Telegram does not expose your phone number to us unless you choose to share it — an extra privacy layer that makes Btrlrn safer for children.</p>
     </div>
   </header>
 
@@ -113,10 +118,10 @@
     </div>
   </section>
 
-  <!-- Why Btrlrn -->
+  <!-- Why btrlrn -->
   <section class="py-12 lg:py-16">
     <div class="max-w-7xl mx-auto px-6 lg:px-8">
-      <h2 class="text-3xl font-bold text-center">Why Btrlrn?</h2>
+  <h2 class="text-3xl font-bold text-center">Why btrlrn?</h2>
       <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         <div class="bg-white rounded-2xl p-6 border border-brand-light shadow-soft">
           <h3 class="text-xl font-semibold">AI‑First</h3>
@@ -137,8 +142,12 @@
   <!-- Footer -->
   <footer class="bg-brand-teal text-white">
     <div class="max-w-7xl mx-auto px-6 lg:px-8 py-10 text-center">
-      <p>Contact us: <a class="underline decoration-brand-yellow/60 hover:decoration-brand-yellow" href="mailto:support@btrlrn.life">support@btrlrn.life</a></p>
-      <p class="mt-2 text-white/80">© 2025 Btrlrn. All rights reserved.</p>
+  <p>Contact us: <a class="underline decoration-brand-yellow/60 hover:decoration-brand-yellow" href="mailto:support@btrlrn.com">support@btrlrn.com</a></p>
+  <div class="mt-6 flex flex-col items-center gap-1 text-sm text-white/80">
+    <span class="font-semibold text-white">© 2025 Gilded Technologies Pvt Ltd</span>
+    <span>CIN: U72900PN2021PTC206389 &nbsp;|&nbsp; GSTIN: 27AAJCG4298C1ZF</span>
+    <span class="text-xs mt-1">All rights reserved.</span>
+  </div>
     </div>
   </footer>
 </body>

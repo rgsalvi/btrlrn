@@ -4,6 +4,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>btrlrn — Better Learning, Every Day</title>
+  <!-- Social Sharing Meta Tags -->
+  <meta property="og:title" content="btrlrn — Better Learning, Every Day" />
+  <meta property="og:description" content="Adaptive, AI-driven learning at your child's pace. 100% free. Trusted by parents." />
+  <meta property="og:image" content="btrlrn_logo.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:alt" content="btrlrn logo" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://btrlrn.com/" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="btrlrn — Better Learning, Every Day" />
+  <meta name="twitter:description" content="Adaptive, AI-driven learning at your child's pace. 100% free. Trusted by parents." />
+  <meta name="twitter:image" content="btrlrn_logo.png" />
   <!-- Tailwind (CDN for MVP). For production, compile a custom build. -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -32,24 +44,43 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body class="font-sans text-brand-teal bg-white">
-  <!-- Header / Hero -->
-  <header class="relative overflow-hidden">
-    <div class="absolute inset-0 bg-brand-light/70 -z-10"></div>
-    <div class="max-w-7xl mx-auto px-6 lg:px-8 py-12 lg:py-20">
-      <div class="flex flex-col-reverse lg:flex-row items-center gap-10">
-        <div class="w-full lg:w-3/5">
-          <div class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 shadow-soft border border-brand-light">
-            <span class="h-2 w-2 rounded-full bg-brand-teal"></span>
-            <span class="text-sm text-brand-teal/80">AI-powered daily learning companion</span>
-          </div>
-          <h1 class="mt-6 text-4xl lg:text-5xl font-bold tracking-tight">Better Learning, Every Day</h1>
-          <p class="mt-4 text-lg text-brand-teal/80">btrlrn helps school students learn at their own pace with bite‑sized topics, adaptive quizzes, and friendly rewards — designed to reassure parents and delight children.</p>
-          <!-- Removed Start Learning on Telegram button and Why Telegram link -->
+  <!-- Sticky Header -->
+  <header class="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-brand-light shadow-sm">
+    <div class="max-w-7xl mx-auto flex items-center justify-between px-6 lg:px-8 py-3">
+      <div class="flex items-center gap-4">
+        <img src="btrlrn_logo_symbol.png" alt="btrlrn logo" class="w-16 h-16 drop-shadow-lg rounded-full border-2 border-brand-teal bg-white p-1" />
+        <span class="text-3xl lg:text-4xl font-extrabold text-brand-teal tracking-tight drop-shadow-sm" style="letter-spacing:-1px;">btrlrn</span>
+      </div>
+      <nav class="hidden md:flex gap-8 text-brand-teal font-semibold text-base">
+        <a href="#how-it-works" class="hover:text-brand-yellow transition">How it works</a>
+        <a href="#for-parents" class="hover:text-brand-yellow transition">For Parents</a>
+        <a href="#contact" class="hover:text-brand-yellow transition">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="relative overflow-hidden bg-brand-light/60 pt-10 pb-16 lg:pt-20 lg:pb-24">
+    <div class="absolute inset-0 bg-gradient-to-br from-brand-light/80 to-white/60 -z-10"></div>
+    <div class="max-w-7xl mx-auto px-6 lg:px-8 flex flex-col items-center lg:flex-row gap-12 lg:gap-20">
+      <div class="flex flex-col lg:flex-row items-center w-full">
+        <div class="flex-shrink-0 flex items-center justify-center mb-6 lg:mb-0 lg:mr-10">
+          <img src="btrlrn_logo.png" alt="btrlrn AI Owl logo" class="w-56 lg:w-80 h-auto drop-shadow-2xl border-4 border-brand-teal bg-white p-2" style="border-radius:1.5rem;" />
         </div>
-        <div class="w-full lg:w-2/5 flex items-center justify-center">
-          <img src="btrlrn_logo.png" alt="btrlrn AI Owl logo" class="w-56 lg:w-80 h-auto drop-shadow" />
+        <div class="flex-1 flex flex-col items-start">
+          <div class="flex items-center gap-3 mb-4">
+            <span class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 shadow-soft border border-brand-light text-sm text-brand-teal/90 font-semibold"><span class="h-2 w-2 rounded-full bg-green-600"></span>100% Free. Always.</span>
+            <span class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 shadow-soft border border-brand-light text-sm text-brand-teal/80"><span class="h-2 w-2 rounded-full bg-brand-teal"></span>AI-powered daily learning companion</span>
+          </div>
+          <h1 class="text-4xl lg:text-5xl font-bold tracking-tight text-brand-teal">Adaptive, AI-Driven Learning — At Your Child’s Pace</h1>
+          <p class="mt-4 text-lg text-brand-teal/80">btrlrn uses advanced AI to personalize every child’s learning journey, adapting to their pace and style. No pressure, just progress — so every child can thrive and build confidence, one step at a time.</p>
+          <div class="mt-6 bg-white/90 border border-brand-light rounded-xl p-4 shadow-soft w-full max-w-xl">
+            <p class="text-brand-teal text-base font-semibold text-center">Our mission: <span class="font-bold">Make world-class learning accessible and free for every child.</span> No fees. No catch.</p>
+          </div>
         </div>
       </div>
+    </div>
+  </section>
 
       <!-- QR & Why Telegram side-by-side on large screens -->
       <div class="mt-10 sm:mt-14 grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-5xl mx-auto">
@@ -77,7 +108,7 @@
   </header>
 
   <!-- How it works -->
-  <section class="py-12 lg:py-16">
+  <section id="how-it-works" class="py-12 lg:py-16">
     <div class="max-w-7xl mx-auto px-6 lg:px-8">
       <h2 class="text-3xl font-bold text-center">How It Works</h2>
       <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -86,8 +117,8 @@
           <p class="mt-2 text-brand-teal/80">Simple, child‑friendly setup: language, name, grade, and curriculum. Parents stay in control.</p>
         </div>
         <div class="bg-white rounded-2xl p-6 border border-brand-light shadow-soft">
-          <div class="text-2xl font-semibold">2. Learn Daily</div>
-          <p class="mt-2 text-brand-teal/80">One topic with an adaptive quiz at the child’s chosen time — no pressure, just progress.</p>
+          <div class="text-2xl font-semibold">2. Learn Daily, Your Way</div>
+          <p class="mt-2 text-brand-teal/80">Every day, btrlrn’s AI adapts lessons and quizzes to your child’s unique pace and needs. No pressure — just the right challenge, at the right time, for the best outcomes.</p>
         </div>
         <div class="bg-white rounded-2xl p-6 border border-brand-light shadow-soft">
           <div class="text-2xl font-semibold">3. Rewards</div>
@@ -98,7 +129,7 @@
   </section>
 
   <!-- For Parents -->
-  <section class="py-12 lg:py-16 bg-brand-light/50">
+  <section id="for-parents" class="py-12 lg:py-16 bg-brand-light/50">
     <div class="max-w-7xl mx-auto px-6 lg:px-8">
       <h2 class="text-3xl font-bold text-center">Made for Parents</h2>
       <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -111,8 +142,8 @@
           <p class="mt-2 text-brand-teal/80">Free to start. Scholarships funded by CSR and partners reduce costs for families.</p>
         </div>
         <div class="bg-white rounded-2xl p-6 border border-brand-light shadow-soft">
-          <h3 class="text-xl font-semibold">Adaptive</h3>
-          <p class="mt-2 text-brand-teal/80">Every child learns at their own pace with AI‑guided steps and supportive feedback.</p>
+          <h3 class="text-xl font-semibold">Truly Adaptive</h3>
+          <p class="mt-2 text-brand-teal/80">Our AI understands each child’s strengths and areas for growth, adjusting the journey so learning is always encouraging, never overwhelming.</p>
         </div>
       </div>
     </div>
@@ -124,8 +155,8 @@
   <h2 class="text-3xl font-bold text-center">Why btrlrn?</h2>
       <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         <div class="bg-white rounded-2xl p-6 border border-brand-light shadow-soft">
-          <h3 class="text-xl font-semibold">AI‑First</h3>
-          <p class="mt-2 text-brand-teal/80">Adaptive lessons and quizzes powered by state‑of‑the‑art AI models.</p>
+          <h3 class="text-xl font-semibold">AI‑Driven & Child-Centered</h3>
+          <p class="mt-2 text-brand-teal/80">btrlrn’s AI tailors every lesson and quiz to your child’s pace, ensuring learning is always supportive, never stressful.</p>
         </div>
         <div class="bg-white rounded-2xl p-6 border border-brand-light shadow-soft">
           <h3 class="text-xl font-semibold">Multi‑Language</h3>
@@ -140,9 +171,18 @@
   </section>
 
   <!-- Footer -->
-  <footer class="bg-brand-teal text-white">
+  <footer id="contact" class="bg-brand-teal text-white">
     <div class="max-w-7xl mx-auto px-6 lg:px-8 py-10 text-center">
-  <p>Contact us: <a class="underline decoration-brand-yellow/60 hover:decoration-brand-yellow" href="mailto:support@btrlrn.com">support@btrlrn.com</a></p>
+  <div class="flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-6">
+    <div class="flex items-center bg-white/10 rounded-full px-4 py-2 gap-2 shadow-sm">
+      <span class="font-semibold text-white">Contact us:</span>
+      <a class="underline decoration-brand-yellow/60 hover:decoration-brand-yellow text-white" href="mailto:support@btrlrn.com">support@btrlrn.com</a>
+    </div>
+    <div class="flex items-center bg-white/10 rounded-full px-4 py-2 gap-2 shadow-sm">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 text-brand-yellow"><path d="M7.75 2h8.5A5.75 5.75 0 0 1 22 7.75v8.5A5.75 5.75 0 0 1 16.25 22h-8.5A5.75 5.75 0 0 1 2 16.25v-8.5A5.75 5.75 0 0 1 7.75 2zm0 1.5A4.25 4.25 0 0 0 3.5 7.75v8.5A4.25 4.25 0 0 0 7.75 20.5h8.5A4.25 4.25 0 0 0 20.5 16.25v-8.5A4.25 4.25 0 0 0 16.25 3.5zm4.25 2.25a6.25 6.25 0 1 1 0 12.5 6.25 6.25 0 0 1 0-12.5zm0 1.5a4.75 4.75 0 1 0 0 9.5 4.75 4.75 0 0 0 0-9.5zm6.25 1.25a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/></svg>
+  <a href="https://instagram.com/btrlrnbot" target="_blank" rel="noopener" class="font-semibold text-white hover:text-brand-yellow transition">@btrlrnbot</a>
+    </div>
+  </div>
   <div class="mt-6 flex flex-col items-center gap-1 text-sm text-white/80">
     <span class="font-semibold text-white">© 2025 Gilded Technologies Pvt Ltd</span>
     <span>CIN: U72900PN2021PTC206389 &nbsp;|&nbsp; GSTIN: 27AAJCG4298C1ZF</span>

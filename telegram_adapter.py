@@ -478,10 +478,12 @@ async def start_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         if update.message is not None:
             await update.message.reply_text(f"{t('WELCOME','en')}\n\n{t('LANG_PROMPT','en')}", reply_markup=kb_lang())
         return
-    # If user exists and has a session, only show welcome if session is idle
-    if sess and sess.get("stage") and sess["stage"] != "idle":
-        # Do not show welcome/buttons if session is not idle (e.g., after subject change/lesson generation)
-        return
+    # If user exists and has a session, show welcome unless in onboarding or lesson
+    if sess and sess.get("stage"):
+        # Only suppress welcome if just changed subject and generated lesson (stage == 'lesson' and just changed subject)
+        # Otherwise, show welcome back message for all other non-onboarding, non-lesson states
+        if sess["stage"].startswith("ask_") or sess["stage"] in ("lesson", "quiz"):  # onboarding or in lesson/quiz
+            return
     # If user exists, profile complete, but no session or idle, show welcome back and main menu/subject selection
     if update.message is not None:
         subj = user.get('subject', 'a subject')

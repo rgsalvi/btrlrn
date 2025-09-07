@@ -1024,9 +1024,8 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_te
                 # Set subject, but do NOT reset level; fetch last level for this subject
                 chosen_subject = subs[i]
                 engine.upsert_user(wa_id, subject=chosen_subject)
-                # Ensure entry exists in user_subjects
+                # Ensure entry exists in user_subjects, but do not reset level
                 level = get_user_subject_level(wa_id, chosen_subject)
-                set_user_subject_level(wa_id, chosen_subject, level)
                 user = rowdict(engine.get_user(wa_id)) or {}
                 subject = chosen_subject
                 lang = get_lang(wa_id)
@@ -1341,14 +1340,17 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             if query:
                 return await query.answer(t("INVALID_CHOICE", lang), show_alert=True)
             return
-        engine.upsert_user(wa_id, grade=g, subject="Mathematics", level=1, streak=0)
+        engine.upsert_user(wa_id, grade=g, subject="Mathematics", streak=0)
         subs = subjects_for_user(wa_id)
+        # On onboarding, insert level=1 for each subject in user_subjects
+        for subj in subs:
+            set_user_subject_level(wa_id, subj, 1)
         engine.set_session(wa_id, "choose_subject")
         if query:
             await query.edit_message_text(t("PROFILE_SAVED", lang))
             # Instead of reply_text, send a new message using bot context
             if query.message and hasattr(ctx, 'bot'):
-                chat_id = query.message.chat.id if hasattr(query.message, 'chat') and hasattr(query.message.chat, 'id') else None
+                chat_id = query.message.chat.id if hasattr(query.message, 'chat') and hasattr(query.message, 'id') else None
                 if chat_id:
                     await ctx.bot.send_message(chat_id=chat_id,
                         text=f"{step_header(lang, 9, 'SUBJECT')}\n{t('ASK_SUBJECT', lang)}",
@@ -1362,14 +1364,15 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         subs = subjects_for_user(wa_id)
         if 0 <= i < len(subs):
             chosen = subs[i]
-            engine.upsert_user(wa_id, subject=chosen, level=1)
+            engine.upsert_user(wa_id, subject=chosen)
+            # Ensure entry exists in user_subjects, but do not reset level
+            level = get_user_subject_level(wa_id, chosen)
             user = rowdict(engine.get_user(wa_id)) or {}
-            level = user.get("level", 1)
             subject = user.get("subject", "")
             lang = get_lang(wa_id)
             # Confirm subject/level to user
-            if query:
-                await query.edit_message_text(
+            if update.message:
+                await update.message.reply_text(
                     f"Subject set to *{subject}* at Level {level}. Generating your next lesson...",
                     parse_mode="Markdown"
                 )
@@ -1386,13 +1389,8 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
                 wa_id=wa_id
             ) if subject else None
             if not raw_lesson:
-                chat_id = None
-                if query and hasattr(query, 'message') and query.message is not None:
-                    if hasattr(query.message, 'chat') and query.message.chat is not None:
-                        if hasattr(query.message.chat, 'id'):
-                            chat_id = query.message.chat.id
-                if chat_id:
-                    return await ctx.bot.send_message(chat_id=chat_id, text="Could not generate lesson. Please try again.")
+                if update.message:
+                    return await update.message.reply_text("Could not generate lesson. Please try again.")
                 return
             lesson = translate_lesson_if_needed(raw_lesson, lang) if raw_lesson else None
             lesson_id = engine.save_lesson(
@@ -1407,15 +1405,9 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             ) if lesson else None
             engine.set_session(wa_id, "lesson", 0, 0, lesson_id)
             intro = "\n".join(lesson["intro"][:3]) if lesson and "intro" in lesson else ""
-            chat_id = None
-            if query and hasattr(query, 'message') and query.message is not None:
-                if hasattr(query.message, 'chat') and query.message.chat is not None:
-                    if hasattr(query.message.chat, 'id'):
-                        chat_id = query.message.chat.id
-            if chat_id:
-                return await ctx.bot.send_message(
-                    chat_id=chat_id,
-                    text=t("TOPIC", lang, title=lesson["title"] if lesson else "", level=level, intro=intro),
+            if update.message:
+                return await update.message.reply_text(
+                    t("TOPIC", lang, title=lesson["title"] if lesson else "", level=level, intro=intro),
                     parse_mode="Markdown"
                 )
             return

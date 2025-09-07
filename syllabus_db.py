@@ -267,13 +267,13 @@ if __name__ == '__main__':
         if grade not in syllabus_data:
             continue
         for subject, topics in syllabus_data[grade].items():
-            subject_desc = {}  # Optionally add subject descriptions
             for topic in topics:
                 insert_syllabus(board, grade, subject, academic_year, topic, subject_desc.get(subject, ''))
 
-    # Display all stored syllabus for CBSE Grades 6 to 12
+    # Display all stored syllabus for Grades 6 to 12, using correct board per grade
     for grade in range(6, 13):
-        print(f"\nCBSE Grade {grade} Syllabus ({academic_year}):\n")
+        board = 'Maharashtra' if grade == 6 else 'CBSE'
+        print(f"\n{board} Grade {grade} Syllabus ({academic_year}):\n")
         for subject in syllabus_data.get(grade, {}):
             results = get_syllabus(board, grade, subject, academic_year)
             print(f"{subject}:")

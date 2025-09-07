@@ -86,6 +86,26 @@ import app as engine  # uses your DB, AI, helpers, logger
 _engine_flask_app = engine.create_app()  # initializes DB, Gemini, logger, etc.
 logger = engine.logger  # reuse same logger
 
+# ---------- MIGRATION: Copy users.level to user_subjects if missing ----------
+def migrate_user_levels_to_user_subjects():
+    conn = engine.db(); cur = conn.cursor()
+    # For each user, copy their level for their current subject if not already present in user_subjects
+    cur.execute('SELECT wa_id, subject, level FROM users WHERE subject IS NOT NULL')
+    for row in cur.fetchall():
+        wa_id, subject, level = row['wa_id'], row['subject'], row['level']
+        if not subject:
+            continue
+        # Check if entry exists
+        cur2 = conn.cursor()
+        cur2.execute('SELECT 1 FROM user_subjects WHERE wa_id=? AND subject=?', (wa_id, subject))
+        if not cur2.fetchone():
+            cur2.execute('INSERT INTO user_subjects (wa_id, subject, level) VALUES (?, ?, ?)', (wa_id, subject, level or 1))
+            conn.commit()
+        cur2.close()
+    conn.close()
+
+migrate_user_levels_to_user_subjects()
+
 def ensure_user_subjects_table():
     conn = engine.db(); cur = conn.cursor()
     cur.execute('''
@@ -832,7 +852,7 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_te
                 await update.message.reply_text(f"{t('WELCOME','en')}\n\n{t('LANG_PROMPT','en')}", reply_markup=kb_lang())
             return
         subj = user.get('subject', 'a subject')
-        lvl = user.get('level', 1)
+        lvl = get_user_subject_level(wa_id, subj) if subj else 1
         msg = (
             f"🦉 Welcome back, {user.get('first_name','')}!\n"
             f"Your last subject was {subj} at Level {lvl}.\n\n"

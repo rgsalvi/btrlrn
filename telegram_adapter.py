@@ -96,7 +96,7 @@ CAT = {
         "LANG_EN": "English",
         "LANG_HI": "हिन्दी",
         "LANG_MR": "मराठी",
-        "WELCOME": "👋 Welcome! I’m your Learning Buddy.",
+    "WELCOME": "🦉 Welcome to btrlrn!",
         "STEP": "Step {n}/9 • {title}",
         "FIRST_NAME": "🧒 First Name",
         "ASK_FIRST": "What’s your *first name*?",
@@ -157,7 +157,7 @@ CAT = {
         "LANG_EN": "English",
         "LANG_HI": "हिन्दी",
         "LANG_MR": "मराठी",
-        "WELCOME": "👋 नमस्ते! मैं आपका Learning Buddy हूँ।",
+    "WELCOME": "🦉 btrlrn में आपका स्वागत है!",
         "STEP": "कदम {n}/9 • {title}",
         "FIRST_NAME": "🧒 पहला नाम",
         "ASK_FIRST": "आपका *पहला नाम* क्या है?",
@@ -218,7 +218,7 @@ CAT = {
         "LANG_EN": "English",
         "LANG_HI": "हिन्दी",
         "LANG_MR": "मराठी",
-        "WELCOME": "👋 नमस्कार! मी तुमचा Learning Buddy आहे.",
+    "WELCOME": "🦉 btrlrn मध्ये तुमचे स्वागत आहे!",
         "STEP": "पायरी {n}/9 • {title}",
         "FIRST_NAME": "🧒 पहिले नाव",
         "ASK_FIRST": "तुमचे *पहिले नाव* काय?",
@@ -805,6 +805,7 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_te
             return await update.message.reply_text("\n".join(lines))
         return
 
+
     if up == "SUBJECT":
         subs = subjects_for_user(wa_id)
         engine.set_session(wa_id, "choose_subject")
@@ -812,20 +813,11 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_te
             await update.message.reply_text(t("ASK_SUBJECT", lang), reply_markup=kb_subjects(subs))
         return
 
-    # Explicit topic selection after subject pick (for CBSE)
+    # Remove explicit topic selection after subject pick. After subject is chosen, set session to idle and prompt user to type START.
     if up == "TOPIC":
-        user = rowdict(engine.get_user(wa_id))
-        board = user.get("board") if user else None
-        grade = user.get("grade") if user else None
-        subject = user.get("subject") if user else None
-        topics = topics_for_user(wa_id, board, grade, subject)
-        if not topics:
-            if update.message:
-                return await update.message.reply_text(f"🎉 You have mastered all topics in {subject} for Grade {grade}!", parse_mode="Markdown")
-            return
-        kb = InlineKeyboardMarkup([[InlineKeyboardButton(t, callback_data=f"TOPIC:{i}")] for i, t in enumerate(topics)])
+        engine.set_session(wa_id, "idle", 0, 0, None)
         if update.message:
-            return await update.message.reply_text(f"Pick a topic to learn in {subject} (Grade {grade}):", reply_markup=kb)
+            return await update.message.reply_text(t("CONTINUE", lang))
         return
 
     if up == "START":

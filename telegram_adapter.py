@@ -334,16 +334,18 @@ def kb_abcd():
         [InlineKeyboardButton("C", callback_data="ANS:C"), InlineKeyboardButton("D", callback_data="ANS:D")],
     ])
 
+
 def kb_next_question():
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("Next Question", callback_data="NEXTQ")]
+    ])
+
 def kb_continue():
     return InlineKeyboardMarkup([
         [
             InlineKeyboardButton("Start", callback_data="START"),
             InlineKeyboardButton("Change Subject", callback_data="SUBJECT")
         ]
-    ])
-    return InlineKeyboardMarkup([
-        [InlineKeyboardButton("Next Question", callback_data="NEXTQ")]
     ])
 
 # ---------- Validation ----------

@@ -551,7 +551,7 @@ async def send_quiz_question(update_or_query, wa_id, lesson, q_index):
                 try:
                     await update_or_query.message.reply_photo(photo=image_url, caption=q['q'])
                     return await update_or_query.message.reply_text(
-                        "\n".join(q['options']), reply_markup=kb_abcd()
+                            "\n".join(q['options']), reply_markup=kb_abcd(), parse_mode="Markdown"
                     )
                 except Exception as e:
                     logger.warning(f"[TG] Failed to send image: {image_url} error: {e}")
@@ -590,7 +590,8 @@ async def start_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             f"Your last subject was {subj} at Level {lvl}.\n\n"
             "Type Start to generate your next topic, or type Subject to change your subject."
         )
-        await update.message.reply_text(msg)
+        if update.message:
+            await update.message.reply_text(msg, parse_mode="Markdown")
 
 async def admin_stats_handler(update, context):
     if not (update.effective_user and update.effective_user.id in ADMIN_IDS):
@@ -610,7 +611,8 @@ async def admin_stats_handler(update, context):
     conn.close()
     if getattr(update, 'message', None):
         return await update.message.reply_text(
-            f"👥 Total: {total}\n🟢 Online(10m): {online}\n📅 DAU: {dau}\n📈 WAU: {wau}"
+            f"👥 Total: {total}\n🟢 Online(10m): {online}\n📅 DAU: {dau}\n📈 WAU: {wau}",
+            parse_mode="Markdown"
         )
     return
 
@@ -622,7 +624,7 @@ async def help_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     if sess and 'lang' in sess:
         lang = sess['lang']
     if update.message:
-        return await update.message.reply_text(t("HELP", lang))
+        return await update.message.reply_text(t("HELP", lang), parse_mode="Markdown")
     return
 
 async def quiz_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
@@ -657,7 +659,7 @@ async def contact_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     phone = clean_phone(contact.phone_number)
     if not valid_indian_mobile10(phone):
         if update.message:
-            return await update.message.reply_text(t("PHONE_BAD", lang))
+            return await update.message.reply_text(t("PHONE_BAD", lang), parse_mode="Markdown")
         return
 def topics_for_user(wa_id, board, grade, subject):
     # Get all topics from syllabus_db (no mastery check)
@@ -908,6 +910,15 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_te
 
     # When generating a lesson (START), use per-subject level
     if up == "START":
+        # Debug: print all user_subjects for this wa_id
+        try:
+            conn = engine.db(); cur = conn.cursor()
+            cur.execute('SELECT subject, level FROM user_subjects WHERE wa_id=?', (wa_id,))
+            subjects_levels = cur.fetchall()
+            logger.info(f"[DEBUG] user_subjects for {wa_id}: {subjects_levels}")
+            conn.close()
+        except Exception as e:
+            logger.warning(f"[DEBUG] Failed to fetch user_subjects for {wa_id}: {e}")
         if update.message:
             await update.message.reply_text(t("GENERATING", lang))
         try:

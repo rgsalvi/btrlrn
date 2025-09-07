@@ -1379,9 +1379,11 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             return
         engine.upsert_user(wa_id, grade=g, subject="Mathematics", streak=0)
         subs = subjects_for_user(wa_id)
-        # On onboarding, insert level=1 for each subject in user_subjects
+        # On onboarding, insert level=1 for each subject in user_subjects only if not already present
         for subj in subs:
-            set_user_subject_level(wa_id, subj, 1)
+            if get_user_subject_level(wa_id, subj) == 1:
+                # Only insert if not present (default get returns 1 if missing)
+                set_user_subject_level(wa_id, subj, 1)
         engine.set_session(wa_id, "choose_subject")
         if query:
             await query.edit_message_text(t("PROFILE_SAVED", lang))

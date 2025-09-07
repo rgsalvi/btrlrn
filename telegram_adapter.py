@@ -478,11 +478,10 @@ async def start_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         if update.message is not None:
             await update.message.reply_text(f"{t('WELCOME','en')}\n\n{t('LANG_PROMPT','en')}", reply_markup=kb_lang())
         return
-    # If user exists and has a session, show welcome unless in onboarding or lesson
+    # If user exists and has a session, show welcome unless in onboarding (ask_*)
     if sess and sess.get("stage"):
-        # Only suppress welcome if just changed subject and generated lesson (stage == 'lesson' and just changed subject)
-        # Otherwise, show welcome back message for all other non-onboarding, non-lesson states
-        if sess["stage"].startswith("ask_") or sess["stage"] in ("lesson", "quiz"):  # onboarding or in lesson/quiz
+        # Only suppress welcome if onboarding (ask_*)
+        if sess["stage"].startswith("ask_"):
             return
     # If user exists, profile complete, but no session or idle, show welcome back and main menu/subject selection
     if update.message is not None:
@@ -795,27 +794,26 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_te
     # ---------- Commands (post-onboarding) ----------
     # up is already set above
 
-    if up == "HELP":
-        if update.message:
-            return await update.message.reply_text(t("HELP", lang))
-        return
 
-    if up == "PROFILE":
-        engine.set_session(wa_id, "profile_menu")
-        u = rowdict(engine.get_user(wa_id))
-        profile_lines = []
-        if u:
-            profile_lines.append("Your current profile:")
-            profile_lines.append(f"A) Name: {u.get('first_name','')} {u.get('last_name','')}")
-            profile_lines.append(f"B) City: {u.get('city','')}")
-            profile_lines.append(f"C) State/Curriculum: {u.get('state','') or u.get('board','')}")
-            profile_lines.append(f"D) Grade: {u.get('grade','')}")
-            profile_lines.append(f"E) Subject: {u.get('subject','')}")
-            profile_lines.append("")
-        profile_lines.append(t("PROFILE_CMD", lang))
-        msg = "\n".join(profile_lines)
-        if update.message:
-            return await update.message.reply_text(msg)
+    # Only /start command triggers welcome back logic
+    if up == "/START":
+        user = rowdict(engine.get_user(wa_id))
+        sess = rowdict(engine.get_session(wa_id))
+        lang = get_lang(wa_id)
+        if not user or profile_missing_for_flow(user):
+            engine.set_session(wa_id, "ask_lang")
+            if update.message is not None:
+                await update.message.reply_text(f"{t('WELCOME','en')}\n\n{t('LANG_PROMPT','en')}", reply_markup=kb_lang())
+            return
+        subj = user.get('subject', 'a subject')
+        lvl = user.get('level', 1)
+        msg = (
+            f"🦉 Welcome back, {user.get('first_name','')}!\n"
+            f"Your last subject was {subj} at Level {lvl}.\n\n"
+            "Type Start to generate your next topic, or type Subject to change your subject."
+        )
+        if update.message is not None:
+            await update.message.reply_text(msg)
         return
 
     if up == "RESET":

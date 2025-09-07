@@ -483,23 +483,23 @@ async def start_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         if update.message is not None:
             subj = user.get('subject', 'a subject')
             lvl = user.get('level', 1)
-            msg = f"🦉 Welcome back, {user.get('first_name','')}!\nYour last subject was {subj} at Level {lvl}."
-            kb = InlineKeyboardMarkup([
-                [InlineKeyboardButton("Continue Learning", callback_data="CONTINUE_LEARNING"),
-                 InlineKeyboardButton("Change Subject", callback_data="SUBJECT")]
-            ])
-            await update.message.reply_text(msg, reply_markup=kb)
+            msg = (
+                f"🦉 Welcome back, {user.get('first_name','')}!\n"
+                f"Your last subject was {subj} at Level {lvl}.\n\n"
+                "Type Start to generate your next topic, or type Subject to change your subject."
+            )
+            await update.message.reply_text(msg)
         return
     # If user exists, profile complete, but no session or idle, show welcome back and main menu/subject selection
     if update.message is not None:
         subj = user.get('subject', 'a subject')
         lvl = user.get('level', 1)
-        msg = f"🦉 Welcome back, {user.get('first_name','')}!\nYour last subject was {subj} at Level {lvl}."
-        kb = InlineKeyboardMarkup([
-            [InlineKeyboardButton("Continue Learning", callback_data="CONTINUE_LEARNING"),
-             InlineKeyboardButton("Change Subject", callback_data="SUBJECT")]
-        ])
-        await update.message.reply_text(msg, reply_markup=kb)
+        msg = (
+            f"🦉 Welcome back, {user.get('first_name','')}!\n"
+            f"Your last subject was {subj} at Level {lvl}.\n\n"
+            "Type Start to generate your next topic, or type Subject to change your subject."
+        )
+        await update.message.reply_text(msg)
 
 async def admin_stats_handler(update, context):
     if not (update.effective_user and update.effective_user.id in ADMIN_IDS):
@@ -851,29 +851,14 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_te
 
 
     if up == "SUBJECT":
-        # After subject is chosen, show profile summary and ask for confirmation
-        u = rowdict(engine.get_user(wa_id))
-        profile_lines = []
-        profile_lines.append("Please review your profile:")
-        if u:
-            profile_lines.append(f"A) Name: {u.get('first_name','')} {u.get('last_name','')}")
-            profile_lines.append(f"B) City: {u.get('city','')}")
-            profile_lines.append(f"C) State/Curriculum: {u.get('state','') or u.get('board','')}")
-            profile_lines.append(f"D) Grade: {u.get('grade','')}")
-            profile_lines.append(f"E) Subject: {u.get('subject','')}")
-        else:
-            profile_lines.append("(Profile data not found)")
-        profile_lines.append("")
-        profile_lines.append("Is this correct?")
-        msg = "\n".join(profile_lines)
-        # Inline buttons: Confirm / Edit Profile
-        kb = InlineKeyboardMarkup([
-            [InlineKeyboardButton("✅ Confirm", callback_data="PROFILE_CONFIRM"),
-             InlineKeyboardButton("✏️ Edit", callback_data="PROFILE_EDIT")]
-        ])
-        engine.set_session(wa_id, "profile_confirm")
+        # Immediately show subject options
+        subs = subjects_for_user(wa_id)
+        engine.set_session(wa_id, "choose_subject")
         if update.message:
-            return await update.message.reply_text(msg, reply_markup=kb)
+            return await update.message.reply_text(
+                f"{step_header(lang, 9, 'SUBJECT')}\n{t('ASK_SUBJECT', lang)}",
+                reply_markup=kb_subjects(subs)
+            )
         return
 
     # Remove explicit topic selection after subject pick. After subject is chosen, set session to idle and prompt user to type START.
@@ -1013,14 +998,51 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_te
             subs = subjects_for_user(wa_id)
             i = ord(up) - ord('A')
             if 0 <= i < len(subs):
+                # Set subject and reset level
                 engine.upsert_user(wa_id, subject=subs[i], level=1)
-                engine.set_session(wa_id, "idle", 0, 0, None)
-                kb_start = InlineKeyboardMarkup([[InlineKeyboardButton("START", callback_data="START")]])
+                user = rowdict(engine.get_user(wa_id)) or {}
+                level = user.get("level", 1)
+                subject = user.get("subject", "")
+                lang = get_lang(wa_id)
+                # Confirm subject/level to user
+                if update.message:
+                    await update.message.reply_text(
+                        f"Subject set to *{subject}* at Level {level}. Generating your next lesson...",
+                        parse_mode="Markdown"
+                    )
+                # Generate and send next lesson
+                trouble = engine.recent_trouble_concepts(wa_id, subject)
+                raw_lesson = engine.ai_generate_lesson(
+                    board=user.get("board"),
+                    grade=user.get("grade"),
+                    subject_label=subject,
+                    level=level,
+                    city=user.get("city"),
+                    state=user.get("state"),
+                    recent_mistakes=trouble,
+                    wa_id=wa_id
+                ) if subject else None
+                if not raw_lesson:
+                    if update.message:
+                        return await update.message.reply_text("Could not generate lesson. Please try again.")
+                    return
+                lesson = translate_lesson_if_needed(raw_lesson, lang) if raw_lesson else None
+                lesson_id = engine.save_lesson(
+                    wa_id=wa_id,
+                    board=user.get("board"),
+                    grade=user.get("grade"),
+                    subject_label=subject,
+                    level=level,
+                    title=lesson["title"] if lesson else None,
+                    intro=lesson["intro"] if lesson else None,
+                    questions=lesson["questions"] if lesson else None
+                ) if lesson else None
+                engine.set_session(wa_id, "lesson", 0, 0, lesson_id)
+                intro = "\n".join(lesson["intro"][:3]) if lesson and "intro" in lesson else ""
                 if update.message:
                     return await update.message.reply_text(
-                        f"Subject set to *{subs[i]}*. Tap START when you're ready to begin.",
-                        parse_mode="Markdown",
-                        reply_markup=kb_start
+                        t("TOPIC", lang, title=lesson["title"] if lesson else "", level=level, intro=intro),
+                        parse_mode="Markdown"
                     )
                 return
             if update.message:

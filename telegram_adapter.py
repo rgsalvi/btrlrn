@@ -480,18 +480,26 @@ async def start_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         return
     # If user exists and has a session, resume from last stage
     if sess and sess.get("stage") and sess["stage"] != "idle":
-        # Resume from last session stage
         if update.message is not None:
-            await update.message.reply_text(f"🦉 Welcome back, {user.get('first_name','')}! Resuming where you left off.")
-        # Route to the appropriate handler based on session stage
-        # (simulate user input to text_handler)
-        fake_update = update
-        fake_ctx = ctx
-        await text_handler(fake_update, fake_ctx)
+            subj = user.get('subject', 'a subject')
+            lvl = user.get('level', 1)
+            msg = f"🦉 Welcome back, {user.get('first_name','')}!\nYour last subject was {subj} at Level {lvl}."
+            kb = InlineKeyboardMarkup([
+                [InlineKeyboardButton("Continue Learning", callback_data="CONTINUE_LEARNING"),
+                 InlineKeyboardButton("Change Subject", callback_data="SUBJECT")]
+            ])
+            await update.message.reply_text(msg, reply_markup=kb)
         return
     # If user exists, profile complete, but no session or idle, show welcome back and main menu/subject selection
     if update.message is not None:
-        await update.message.reply_text(f"🦉 Welcome back, {user.get('first_name','')}! What would you like to do today?", reply_markup=kb_continue())
+        subj = user.get('subject', 'a subject')
+        lvl = user.get('level', 1)
+        msg = f"🦉 Welcome back, {user.get('first_name','')}!\nYour last subject was {subj} at Level {lvl}."
+        kb = InlineKeyboardMarkup([
+            [InlineKeyboardButton("Continue Learning", callback_data="CONTINUE_LEARNING"),
+             InlineKeyboardButton("Change Subject", callback_data="SUBJECT")]
+        ])
+        await update.message.reply_text(msg, reply_markup=kb)
 
 async def admin_stats_handler(update, context):
     if not (update.effective_user and update.effective_user.id in ADMIN_IDS):
@@ -1038,6 +1046,68 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_te
     return
 
 async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    # Handle Continue Learning button
+    query = update.callback_query if hasattr(update, 'callback_query') else None
+    data = query.data if query and hasattr(query, 'data') else ""
+    if data == "CONTINUE_LEARNING":
+        wa_id = ""
+        if query and getattr(query, 'message', None):
+            chat_obj = getattr(query.message, 'chat', None)
+            if chat_obj and hasattr(chat_obj, 'id'):
+                wa_id = f"telegram:{chat_obj.id}"
+        user = rowdict(engine.get_user(wa_id))
+        sess = rowdict(engine.get_session(wa_id))
+        lang = get_lang(wa_id)
+        # If session exists and is not idle, resume from last stage
+        if sess and sess.get("stage") and sess["stage"] != "idle":
+            # Simulate user input to text_handler to resume
+            await text_handler(update, ctx)
+            return
+        # Otherwise, start a new lesson in the user's last subject/level
+        if user:
+            if query and getattr(query, 'edit_message_text', None):
+                await query.edit_message_text("💡 Generating your lesson, please wait…")
+                chat_id = None
+                if query.message and getattr(query.message, 'chat', None) and hasattr(query.message.chat, 'id'):
+                    chat_id = query.message.chat.id
+                if chat_id and hasattr(ctx, 'bot'):
+                    await ctx.bot.send_chat_action(chat_id=chat_id, action="typing")
+            level = user.get("level", 1)
+            subject = user.get("subject")
+            trouble = engine.recent_trouble_concepts(wa_id, subject)
+            raw_lesson = engine.ai_generate_lesson(
+                board=user.get("board"),
+                grade=user.get("grade"),
+                subject_label=subject,
+                level=level,
+                city=user.get("city"),
+                state=user.get("state"),
+                recent_mistakes=trouble,
+                wa_id=wa_id
+            ) if subject else None
+            if not raw_lesson:
+                if query and getattr(query, 'edit_message_text', None):
+                    await query.edit_message_text("Could not generate lesson. Please try again.")
+                return
+            lesson = translate_lesson_if_needed(raw_lesson, lang) if raw_lesson else None
+            lesson_id = engine.save_lesson(
+                wa_id=wa_id,
+                board=user.get("board"),
+                grade=user.get("grade"),
+                subject_label=subject,
+                level=level,
+                title=lesson["title"] if lesson else None,
+                intro=lesson["intro"] if lesson else None,
+                questions=lesson["questions"] if lesson else None
+            ) if lesson else None
+            engine.set_session(wa_id, "lesson", 0, 0, lesson_id)
+            intro = "\n".join(lesson["intro"][:3]) if lesson and "intro" in lesson else ""
+            if query and getattr(query, 'edit_message_text', None):
+                await query.edit_message_text(
+                    t("TOPIC", lang, title=lesson["title"] if lesson else "", level=level, intro=intro),
+                    parse_mode="Markdown"
+                )
+            return
     query = update.callback_query if hasattr(update, 'callback_query') else None
     data = query.data if query and hasattr(query, 'data') else ""
     # Profile confirmation step

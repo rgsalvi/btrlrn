@@ -1005,6 +1005,18 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             if query and getattr(query, 'edit_message_text', None):
                 return await query.edit_message_text("Profile not found. Please restart.")
             return
+        # Show 'Generating your lesson...' message
+        if query and getattr(query, 'edit_message_text', None):
+            gen_msg = await query.edit_message_text("💡 Generating your lesson, please wait…")
+        # Show typing indicator
+        chat_id = None
+        if query and getattr(query, 'message', None):
+            chat_obj = getattr(query.message, 'chat', None)
+            if chat_obj and hasattr(chat_obj, 'id'):
+                chat_id = chat_obj.id
+        if chat_id and hasattr(ctx, 'bot'):
+            await ctx.bot.send_chat_action(chat_id=chat_id, action="typing")
+        # Generate lesson
         level = user["level"] if user and "level" in user and user["level"] else 1
         subject = user["subject"] if user and "subject" in user else None
         trouble = engine.recent_trouble_concepts(wa_id, subject)

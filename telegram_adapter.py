@@ -1,32 +1,3 @@
-# --- User-Subjects Table for Per-Subject Level Tracking ---
-def ensure_user_subjects_table():
-    conn = engine.db(); cur = conn.cursor()
-    cur.execute('''
-        CREATE TABLE IF NOT EXISTS user_subjects (
-            wa_id TEXT NOT NULL,
-            subject TEXT NOT NULL,
-            level INTEGER NOT NULL DEFAULT 1,
-            PRIMARY KEY (wa_id, subject)
-        )
-    ''')
-    conn.commit(); conn.close()
-
-def get_user_subject_level(wa_id, subject):
-    conn = engine.db(); cur = conn.cursor()
-    cur.execute('SELECT level FROM user_subjects WHERE wa_id=? AND subject=?', (wa_id, subject))
-    row = cur.fetchone(); conn.close()
-    return row['level'] if row else 1
-
-def set_user_subject_level(wa_id, subject, level):
-    conn = engine.db(); cur = conn.cursor()
-    cur.execute('''
-        INSERT INTO user_subjects (wa_id, subject, level) VALUES (?, ?, ?)
-        ON CONFLICT(wa_id, subject) DO UPDATE SET level=excluded.level
-    ''', (wa_id, subject, level))
-    conn.commit(); conn.close()
-
-ensure_user_subjects_table()
-# telegram_adapter.py
 import os
 import sys
 import re
@@ -102,6 +73,34 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(
 import app as engine  # uses your DB, AI, helpers, logger
 _engine_flask_app = engine.create_app()  # initializes DB, Gemini, logger, etc.
 logger = engine.logger  # reuse same logger
+
+def ensure_user_subjects_table():
+    conn = engine.db(); cur = conn.cursor()
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS user_subjects (
+            wa_id TEXT NOT NULL,
+            subject TEXT NOT NULL,
+            level INTEGER NOT NULL DEFAULT 1,
+            PRIMARY KEY (wa_id, subject)
+        )
+    ''')
+    conn.commit(); conn.close()
+
+ensure_user_subjects_table()
+
+def get_user_subject_level(wa_id, subject):
+    conn = engine.db(); cur = conn.cursor()
+    cur.execute('SELECT level FROM user_subjects WHERE wa_id=? AND subject=?', (wa_id, subject))
+    row = cur.fetchone(); conn.close()
+    return row['level'] if row else 1
+
+def set_user_subject_level(wa_id, subject, level):
+    conn = engine.db(); cur = conn.cursor()
+    cur.execute('''
+        INSERT INTO user_subjects (wa_id, subject, level) VALUES (?, ?, ?)
+        ON CONFLICT(wa_id, subject) DO UPDATE SET level=excluded.level
+    ''', (wa_id, subject, level))
+    conn.commit(); conn.close()
 
 # ---------- Add mastered_topics table if not exists ----------
 def ensure_mastered_topics_table():
@@ -236,7 +235,7 @@ CAT = {
         "PHONE": "📱 मोबाइल नंबर",
         "ASK_PHONE": "*Share my phone* दबाएँ या 10 अंकों का मोबाइल नंबर लिखें।",
         "PHONE_BTN": "Share my phone",
-        "PHONE_BAD": "कृपया 10 अंकों का भारतीय नंबर भेजें (6–9 से शुरू), जैसे 9876543210।",
+        "PHONE_BAD": "कृपया 10 अंकी भारतीय नंबर भेजें (6–9 से शुरू), जैसे 9876543210।",
         "CITY": "🏙️ शहर",
         "ASK_CITY": "आप किस *शहर* में रहते हैं?",
         "BOARD": "📚 पाठ्यक्रम",
@@ -1090,7 +1089,7 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         return
     if data == "SUBJECT":
         # Simulate user sending '/subject' in chat
-        await text_handler(update, ctx, forced_text="/subject")
+        await text_handler(update, ctx, forced_text="SUBJECT")
         return
     query = update.callback_query if hasattr(update, 'callback_query') else None
     data = query.data if query and hasattr(query, 'data') else ""

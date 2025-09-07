@@ -1358,7 +1358,6 @@ if __name__ == "__main__":
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
     token = os.environ["TELEGRAM_BOT_TOKEN"].strip()
-    # More forgiving HTTP client (fixes intermittent timeouts)
     req = HTTPXRequest(
         connection_pool_size=20,
         connect_timeout=20.0,
@@ -1378,29 +1377,6 @@ if __name__ == "__main__":
     app.add_handler(CommandHandler("profile", profile_cmd))
     app.add_handler(CommandHandler("stats", stats_cmd))
     app.add_handler(CommandHandler("reset", reset_cmd))
-    app.add_handler(MessageHandler(filters.CONTACT, contact_handler))
-    from functools import partial
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, lambda update, ctx: text_handler(update, ctx)))
-    app.add_handler(CallbackQueryHandler(on_button))
-
-    print("🤖 Telegram bot is running… press Ctrl+C to stop.")
-    app.run_polling()
-
-    token = os.environ["TELEGRAM_BOT_TOKEN"].strip()
-    # More forgiving HTTP client (fixes intermittent timeouts)
-    req = HTTPXRequest(
-        connection_pool_size=20,
-        connect_timeout=20.0,
-        read_timeout=60.0,
-        write_timeout=20.0,
-        pool_timeout=20.0,
-        http_version="1.1",
-    )
-
-    app = Application.builder().token(token).request(req).build()
-
-    app.add_handler(CommandHandler("start", start_cmd))
-    app.add_handler(CommandHandler("adminstats", admin_stats_handler))
     app.add_handler(MessageHandler(filters.CONTACT, contact_handler))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_handler))
     app.add_handler(CallbackQueryHandler(on_button))

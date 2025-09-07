@@ -1,3 +1,31 @@
+# --- User-Subjects Table for Per-Subject Level Tracking ---
+def ensure_user_subjects_table():
+    conn = engine.db(); cur = conn.cursor()
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS user_subjects (
+            wa_id TEXT NOT NULL,
+            subject TEXT NOT NULL,
+            level INTEGER NOT NULL DEFAULT 1,
+            PRIMARY KEY (wa_id, subject)
+        )
+    ''')
+    conn.commit(); conn.close()
+
+def get_user_subject_level(wa_id, subject):
+    conn = engine.db(); cur = conn.cursor()
+    cur.execute('SELECT level FROM user_subjects WHERE wa_id=? AND subject=?', (wa_id, subject))
+    row = cur.fetchone(); conn.close()
+    return row['level'] if row else 1
+
+def set_user_subject_level(wa_id, subject, level):
+    conn = engine.db(); cur = conn.cursor()
+    cur.execute('''
+        INSERT INTO user_subjects (wa_id, subject, level) VALUES (?, ?, ?)
+        ON CONFLICT(wa_id, subject) DO UPDATE SET level=excluded.level
+    ''', (wa_id, subject, level))
+    conn.commit(); conn.close()
+
+ensure_user_subjects_table()
 # telegram_adapter.py
 import os
 import sys
@@ -27,6 +55,45 @@ from telegram.ext import (
 from telegram.request import HTTPXRequest
 from datetime import datetime, timezone
 def _now_iso(): return datetime.now(timezone.utc).isoformat()
+
+# ---------- MISSING HELPERS ----------
+def profile_missing_for_flow(user):
+    # Returns True if any required profile field is missing for onboarding/lesson flow
+    required = ["first_name", "last_name", "dob", "city", "board", "state", "grade"]
+    return any(not user.get(f) for f in required)
+
+def subjects_for_user(wa_id):
+    # Returns list of subjects available for the user (from user profile)
+    user = rowdict(engine.get_user(wa_id))
+    if not user: return []
+    board, grade = user.get("board"), user.get("grade")
+    if not board or not grade: return []
+    # Use engine helper if available, else fallback to static
+    try:
+        return engine.subjects_for(board, grade)
+    except Exception:
+        # Fallback: common subjects
+        return ["Maths", "Science", "English", "Social Science"]
+
+def parse_board_choice(text):
+    # Parse board choice from user input (A/B/C or CBSE/ICSE/State)
+    t = (text or "").strip().lower()
+    if t in ("a", "cbse"): return "CBSE"
+    if t in ("b", "icse"): return "ICSE"
+    if t in ("c", "state"): return "State"
+    return None
+
+def best_match_state(text):
+    # Fuzzy match user input to a state name
+    t = (text or "").strip().lower()
+    for s in IN_STATES:
+        if t == s.lower():
+            return s
+    # Try partial match
+    for s in IN_STATES:
+        if t in s.lower():
+            return s
+    return None
 
 # ---------- Logging ----------
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
@@ -561,58 +628,6 @@ async def contact_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         if update.message:
             return await update.message.reply_text(t("PHONE_BAD", lang))
         return
-    engine.upsert_user(wa_id, phone=phone)
-    engine.set_session(wa_id, "ask_city")
-    if update.message:
-        return await update.message.reply_text(
-            f"{step_header(lang, 5, 'CITY')}\n{t('ASK_CITY', lang)}",
-            reply_markup=None
-        )
-    return
-
-def profile_missing_for_flow(u) -> bool:
-    if not u: return True
-    required = ("first_name","last_name","dob","city","board","grade")
-    return any((k not in u or u[k] is None or u[k] == "") for k in required)
-
-def parse_board_choice(text: str) -> str | None:
-    if not text: return None
-    tt = text.strip().upper()
-    if tt in ("A","CBSE"): return "CBSE"
-    if tt in ("B","ICSE"): return "ICSE"
-    if tt in ("C","STATE","STATE BOARD","STATEBOARD"): return "STATE"
-    return None
-
-def best_match_state(s: str) -> str | None:
-    s = (s or "").strip().lower()
-    for st in IN_STATES:
-        if st.lower() == s:
-            return st
-    for st in IN_STATES:
-        if s and st.lower().startswith(s):
-            return st
-    return None
-
-def subjects_for_user(wa_id: str):
-    u = rowdict(engine.get_user(wa_id))
-    board = (u["board"] if u and "board" in u and u["board"] else "")
-    grade = str(u["grade"] if u and "grade" in u and u["grade"] else "")
-    # Query subjects from syllabus table for this board and grade
-    subs = []
-    try:
-        conn = engine.db(); cur = conn.cursor()
-        cur.execute("SELECT DISTINCT subject FROM syllabus WHERE board=? AND grade=?", (board, grade))
-        subs = [r[0] for r in cur.fetchall()]
-        conn.close()
-    except Exception as e:
-        logger.error(f"[TG] subjects_for_user error: {e}")
-        subs = []
-    # Fallback to defaults if none found or error
-    if not subs:
-        subs = ["English","Mathematics","Science","Social Science"]
-    return subs
-
-# Helper: get topics for subject/grade/board, excluding mastered
 def topics_for_user(wa_id, board, grade, subject):
     # Get all topics from syllabus_db (no mastery check)
     conn = engine.db(); cur = conn.cursor()
@@ -1044,6 +1059,12 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_te
         if sess and "stage" in sess and sess["stage"] == "quiz":
             user = rowdict(engine.get_user(wa_id))
             reply = engine.process_ai_answer(user, sess, up)
+            # If lesson is completed, increment level for this subject
+            if reply and "🎉" in reply:
+                subject = user.get("subject") if user else None
+                if subject:
+                    prev_level = get_user_subject_level(wa_id, subject)
+                    set_user_subject_level(wa_id, subject, prev_level + 1)
             if update.message:
                 if "🎉" in reply:
                     return await update.message.reply_text(reply)

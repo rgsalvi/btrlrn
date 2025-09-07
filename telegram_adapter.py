@@ -469,11 +469,29 @@ async def send_quiz_question(update_or_query, wa_id, lesson, q_index):
 # ---------- Handlers ----------
 async def start_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     wa_id = uid_from_tg(update)
+    user = rowdict(engine.get_user(wa_id))
     sess = rowdict(engine.get_session(wa_id))
-    if not sess:
+    lang = get_lang(wa_id)
+    # If user does not exist or profile is incomplete, start onboarding
+    if not user or profile_missing_for_flow(user):
         engine.set_session(wa_id, "ask_lang")
+        if update.message is not None:
+            await update.message.reply_text(f"{t('WELCOME','en')}\n\n{t('LANG_PROMPT','en')}", reply_markup=kb_lang())
+        return
+    # If user exists and has a session, resume from last stage
+    if sess and sess.get("stage") and sess["stage"] != "idle":
+        # Resume from last session stage
+        if update.message is not None:
+            await update.message.reply_text(f"🦉 Welcome back, {user.get('first_name','')}! Resuming where you left off.")
+        # Route to the appropriate handler based on session stage
+        # (simulate user input to text_handler)
+        fake_update = update
+        fake_ctx = ctx
+        await text_handler(fake_update, fake_ctx)
+        return
+    # If user exists, profile complete, but no session or idle, show welcome back and main menu/subject selection
     if update.message is not None:
-        await update.message.reply_text(f"{t('WELCOME','en')}\n\n{t('LANG_PROMPT','en')}", reply_markup=kb_lang())
+        await update.message.reply_text(f"🦉 Welcome back, {user.get('first_name','')}! What would you like to do today?", reply_markup=kb_continue())
 
 async def admin_stats_handler(update, context):
     if not (update.effective_user and update.effective_user.id in ADMIN_IDS):

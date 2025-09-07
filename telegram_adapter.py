@@ -743,19 +743,29 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_te
             return
 
         if stage == "ask_grade" or (user and not user.get("grade")):
-            g = re.sub(r"\D","", text or "")
-            if not g or not (6 <= int(g) <= 12):
-                if update.message:
-                    return await update.message.reply_text(t("INVALID_CHOICE", lang), reply_markup=kb_grades(lang))
-                return
-            engine.upsert_user(wa_id, grade=g, subject="Mathematics", level=1, streak=0)
-            subs = subjects_for_user(wa_id)
-            engine.set_session(wa_id, "choose_subject")
+            # Show profile summary and ask for confirmation
+            u = rowdict(engine.get_user(wa_id))
+            profile_lines = []
+            profile_lines.append("Please review your profile:")
+            if u:
+                profile_lines.append(f"A) Name: {u.get('first_name','')} {u.get('last_name','')}")
+                profile_lines.append(f"B) City: {u.get('city','')}")
+                profile_lines.append(f"C) State/Curriculum: {u.get('state','') or u.get('board','')}")
+                profile_lines.append(f"D) Grade: {u.get('grade','')}")
+                profile_lines.append(f"E) Subject: {u.get('subject','')}")
+            else:
+                profile_lines.append("(Profile data not found)")
+            profile_lines.append("")
+            profile_lines.append("Is this correct?")
+            msg = "\n".join(profile_lines)
+            # Inline buttons: Confirm / Edit Profile
+            kb = InlineKeyboardMarkup([
+                [InlineKeyboardButton("✅ Confirm", callback_data="PROFILE_CONFIRM"),
+                 InlineKeyboardButton("✏️ Edit", callback_data="PROFILE_EDIT")]
+            ])
+            engine.set_session(wa_id, "profile_confirm")
             if update.message:
-                return await update.message.reply_text(
-                    f"{step_header(lang, 9, 'SUBJECT')}\n{t('ASK_SUBJECT', lang)}",
-                    reply_markup=kb_subjects(subs)
-                )
+                return await update.message.reply_text(msg, reply_markup=kb)
             return
 
         if update.message:

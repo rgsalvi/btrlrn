@@ -125,7 +125,7 @@ CAT = {
         "SUBJECT": "🧠 Subject for today",
         "ASK_SUBJECT": "Pick a subject to learn today:",
         "PROFILE_SAVED": "Profile saved ✅",
-        "CONTINUE": "Type START when ready, or SUBJECT to switch.",
+    "CONTINUE": "Choose an option below to continue.",
         "HELP": (
             "Commands:\n"
             "START — begin today’s AI topic\n"
@@ -186,7 +186,7 @@ CAT = {
         "SUBJECT": "🧠 आज का विषय",
         "ASK_SUBJECT": "आज कौन-सा विषय पढ़ना चाहेंगे?",
         "PROFILE_SAVED": "प्रोफ़ाइल सेव हो गई ✅",
-        "CONTINUE": "तैयार हों तो START लिखें, या SUBJECT बदलें।",
+    "CONTINUE": "आगे बढ़ने के लिए नीचे विकल्प चुनें।",
         "HELP": (
             "Commands:\n"
             "START — आज का AI टॉपिक\n"
@@ -247,7 +247,7 @@ CAT = {
         "SUBJECT": "🧠 आजचा विषय",
         "ASK_SUBJECT": "आज कोणता विषय शिकायचा?",
         "PROFILE_SAVED": "प्रोफाइल सेव झाले ✅",
-        "CONTINUE": "तयार झाल्यावर START, नाहीतर SUBJECT बदला.",
+    "CONTINUE": "पुढे जाण्यासाठी खालील पर्याय निवडा.",
         "HELP": (
             "Commands:\n"
             "START — आजचा AI विषय\n"
@@ -1184,9 +1184,9 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             chosen = subs[i]
             engine.upsert_user(wa_id, subject=chosen, level=1)
             engine.set_session(wa_id, "idle", 0, 0, None)
-            # Prompt user to type START to begin
+            # Show continue options as buttons
             if query:
-                return await query.edit_message_text(t("CONTINUE", lang))
+                return await query.edit_message_text(t("CONTINUE", lang), reply_markup=kb_continue())
             return
         if query:
             return await query.answer(t("INVALID_CHOICE", lang), show_alert=True)

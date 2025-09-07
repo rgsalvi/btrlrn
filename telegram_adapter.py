@@ -895,6 +895,7 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_te
             subject = user.get("subject") if user else None
             level = get_user_subject_level(wa_id, subject) if subject else 1
             trouble = engine.recent_trouble_concepts(wa_id, subject) if user else None
+            logger.info(f"[DEBUG] Lesson generation for wa_id={wa_id}, subject={subject!r}, level={level}")
             raw_lesson = engine.ai_generate_lesson(
                 board=user.get("board") if user else None,
                 grade=user.get("grade") if user else None,

@@ -1497,6 +1497,7 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             if query.message and hasattr(ctx, 'bot'):
                 chat_id = query.message.chat.id if hasattr(query.message, 'chat') and hasattr(query.message.chat, 'id') else None
                 if chat_id:
+                                      
                                        await ctx.bot.send_message(chat_id=chat_id,
                         text="Tap below for the next question:",
                         reply_markup=kb_next_question())
@@ -1505,3 +1506,34 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
     if query:
         return await query.answer("OK")
+
+if __name__ == "__main__":
+    # Load your bot token from environment or config
+    token = os.environ.get("TELEGRAM_BOT_TOKEN")
+    if not token:
+        raise RuntimeError("TELEGRAM_BOT_TOKEN environment variable not set.")
+
+    req = HTTPXRequest(
+        connect_timeout=20.0,
+        read_timeout=20.0,
+        write_timeout=20.0,
+        pool_timeout=20.0,
+        http_version="1.1",
+    )
+
+    app = Application.builder().token(token).request(req).build()
+
+    app.add_handler(CommandHandler("start", start_cmd))
+    app.add_handler(CommandHandler("adminstats", admin_stats_handler))
+    app.add_handler(CommandHandler("help", help_cmd))
+    app.add_handler(CommandHandler("quiz", quiz_cmd))
+    app.add_handler(CommandHandler("subject", subject_cmd))
+    app.add_handler(CommandHandler("profile", profile_cmd))
+    app.add_handler(CommandHandler("stats", stats_cmd))
+    app.add_handler(CommandHandler("reset", reset_cmd))
+
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_handler))
+    app.add_handler(CallbackQueryHandler(on_button))
+
+    # Run the bot
+    app.run_polling()

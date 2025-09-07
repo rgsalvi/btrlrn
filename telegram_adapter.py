@@ -614,6 +614,7 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_te
     sess = rowdict(engine.get_session(wa_id))
     lang = get_lang(wa_id)
 
+
     # ----------- Onboarding & Guard -----------
     if not user or (sess and (sess["stage"] or "").startswith("ask_")) or profile_missing_for_flow(user):
         stage = (sess["stage"] if sess else "ask_lang")
@@ -656,22 +657,6 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_te
                     return await update.message.reply_text(f"{step_header(lang, 3, 'DOB')}\n{t('DOB_BAD', lang)}")
                 return
             engine.upsert_user(wa_id, dob=text)
-            engine.set_session(wa_id, "ask_phone")
-            kb = ReplyKeyboardMarkup([[KeyboardButton(t("PHONE_BTN", lang), request_contact=True)]], resize_keyboard=True, one_time_keyboard=True)
-            if update.message:
-                return await update.message.reply_text(f"{step_header(lang, 4, 'PHONE')}\n{t('ASK_PHONE', lang)}", reply_markup=kb)
-            return
-
-        if stage == "ask_phone" or (user and not user.get("phone")):
-            digits = re.sub(r"\D","", text or "")
-            if digits.startswith("91") and len(digits) == 12:
-                digits = digits[2:]
-            if not valid_indian_mobile10(digits):
-                kb = ReplyKeyboardMarkup([[KeyboardButton(t("PHONE_BTN", lang), request_contact=True)]], resize_keyboard=True, one_time_keyboard=True)
-                if update.message:
-                    return await update.message.reply_text(t("PHONE_BAD", lang), reply_markup=kb)
-                return
-            engine.upsert_user(wa_id, phone=digits)
             engine.set_session(wa_id, "ask_city")
             if update.message:
                 return await update.message.reply_text(f"{step_header(lang, 5, 'CITY')}\n{t('ASK_CITY', lang)}", reply_markup=None)

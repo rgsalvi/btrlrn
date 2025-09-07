@@ -1045,12 +1045,17 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_te
                 user = rowdict(engine.get_user(wa_id)) or {}
                 subject = chosen_subject
                 lang = get_lang(wa_id)
-                # Confirm subject/level to user
+                # Confirm subject/level to user (always, for both message and callback query)
+                confirm_msg = f"Subject set to *{subject}* at Level {level}. Generating your next lesson..."
                 if update.message:
-                    await update.message.reply_text(
-                        f"Subject set to *{subject}* at Level {level}. Generating your next lesson...",
-                        parse_mode="Markdown"
-                    )
+                    await update.message.reply_text(confirm_msg, parse_mode="Markdown")
+                elif hasattr(update, 'callback_query') and update.callback_query:
+                    query = update.callback_query
+                    if hasattr(query, 'edit_message_text'):
+                        await query.edit_message_text(confirm_msg, parse_mode="Markdown")
+                    elif hasattr(query, 'message') and query.message and hasattr(query.message, 'chat') and hasattr(query.message.chat, 'id') and hasattr(ctx, 'bot'):
+                        chat_id = query.message.chat.id
+                        await ctx.bot.send_message(chat_id=chat_id, text=confirm_msg, parse_mode="Markdown")
                 # Generate and send next lesson
                 trouble = engine.recent_trouble_concepts(wa_id, subject)
                 raw_lesson = engine.ai_generate_lesson(
@@ -1402,12 +1407,17 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             user = rowdict(engine.get_user(wa_id)) or {}
             subject = user.get("subject", "")
             lang = get_lang(wa_id)
-            # Confirm subject/level to user
+            # Confirm subject/level to user (always, for both message and callback query)
+            confirm_msg = f"Subject set to *{subject}* at Level {level}. Generating your next lesson..."
             if update.message:
-                await update.message.reply_text(
-                    f"Subject set to *{subject}* at Level {level}. Generating your next lesson...",
-                    parse_mode="Markdown"
-                )
+                await update.message.reply_text(confirm_msg, parse_mode="Markdown")
+            elif hasattr(update, 'callback_query') and update.callback_query:
+                query = update.callback_query
+                if hasattr(query, 'edit_message_text'):
+                    await query.edit_message_text(confirm_msg, parse_mode="Markdown")
+                elif hasattr(query, 'message') and query.message and hasattr(query.message, 'chat') and hasattr(query.message.chat, 'id') and hasattr(ctx, 'bot'):
+                    chat_id = query.message.chat.id
+                    await ctx.bot.send_message(chat_id=chat_id, text=confirm_msg, parse_mode="Markdown")
             # Generate and send next lesson
             trouble = engine.recent_trouble_concepts(wa_id, subject)
             raw_lesson = engine.ai_generate_lesson(
@@ -1487,7 +1497,7 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             if query.message and hasattr(ctx, 'bot'):
                 chat_id = query.message.chat.id if hasattr(query.message, 'chat') and hasattr(query.message.chat, 'id') else None
                 if chat_id:
-                    await ctx.bot.send_message(chat_id=chat_id,
+                                       await ctx.bot.send_message(chat_id=chat_id,
                         text="Tap below for the next question:",
                         reply_markup=kb_next_question())
             return
@@ -1495,36 +1505,3 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
     if query:
         return await query.answer("OK")
-
-# ---------- Launcher (Windows-friendly + tolerant HTTP client) ----------
-if __name__ == "__main__":
-
-    if sys.platform.startswith("win"):
-        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-
-    token = os.environ["TELEGRAM_BOT_TOKEN"].strip()
-    req = HTTPXRequest(
-        connection_pool_size=20,
-        connect_timeout=20.0,
-        read_timeout=60.0,
-        write_timeout=20.0,
-        pool_timeout=20.0,
-        http_version="1.1",
-    )
-
-    app = Application.builder().token(token).request(req).build()
-
-    app.add_handler(CommandHandler("start", start_cmd))
-    app.add_handler(CommandHandler("adminstats", admin_stats_handler))
-    app.add_handler(CommandHandler("help", help_cmd))
-    app.add_handler(CommandHandler("quiz", quiz_cmd))
-    app.add_handler(CommandHandler("subject", subject_cmd))
-    app.add_handler(CommandHandler("profile", profile_cmd))
-    app.add_handler(CommandHandler("stats", stats_cmd))
-    app.add_handler(CommandHandler("reset", reset_cmd))
-
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_handler))
-    app.add_handler(CallbackQueryHandler(on_button))
-
-    # Run the bot
-    app.run_polling()

@@ -335,6 +335,13 @@ def kb_abcd():
     ])
 
 def kb_next_question():
+def kb_continue():
+    return InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton("Start", callback_data="START"),
+            InlineKeyboardButton("Change Subject", callback_data="SUBJECT")
+        ]
+    ])
     return InlineKeyboardMarkup([
         [InlineKeyboardButton("Next Question", callback_data="NEXTQ")]
     ])
@@ -816,7 +823,7 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_te
     if up == "TOPIC":
         engine.set_session(wa_id, "idle", 0, 0, None)
         if update.message:
-            return await update.message.reply_text(t("CONTINUE", lang))
+            return await update.message.reply_text(t("CONTINUE", lang), reply_markup=kb_continue())
         return
 
     if up == "START":

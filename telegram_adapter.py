@@ -478,17 +478,9 @@ async def start_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         if update.message is not None:
             await update.message.reply_text(f"{t('WELCOME','en')}\n\n{t('LANG_PROMPT','en')}", reply_markup=kb_lang())
         return
-    # If user exists and has a session, resume from last stage
+    # If user exists and has a session, only show welcome if session is idle
     if sess and sess.get("stage") and sess["stage"] != "idle":
-        if update.message is not None:
-            subj = user.get('subject', 'a subject')
-            lvl = user.get('level', 1)
-            msg = (
-                f"🦉 Welcome back, {user.get('first_name','')}!\n"
-                f"Your last subject was {subj} at Level {lvl}.\n\n"
-                "Type Start to generate your next topic, or type Subject to change your subject."
-            )
-            await update.message.reply_text(msg)
+        # Do not show welcome/buttons if session is not idle (e.g., after subject change/lesson generation)
         return
     # If user exists, profile complete, but no session or idle, show welcome back and main menu/subject selection
     if update.message is not None:

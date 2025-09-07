@@ -1050,12 +1050,12 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query if hasattr(update, 'callback_query') else None
     data = query.data if query and hasattr(query, 'data') else ""
     if data == "CONTINUE_LEARNING":
-        # Simulate sending '/start' as if user typed it
-        await text_handler(update, ctx, forced_text="/start")
+        # Simulate user sending 'Start' in chat
+        await text_handler(update, ctx, forced_text="Start")
         return
     if data == "SUBJECT":
-        # Just call subject_cmd logic for subject change
-        await subject_cmd(update, ctx)
+        # Simulate user sending '/subject' in chat
+        await text_handler(update, ctx, forced_text="/subject")
         return
     query = update.callback_query if hasattr(update, 'callback_query') else None
     data = query.data if query and hasattr(query, 'data') else ""

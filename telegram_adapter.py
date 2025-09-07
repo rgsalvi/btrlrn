@@ -918,11 +918,27 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_te
             ) if lesson else None
             engine.set_session(wa_id, "lesson", 0, 0, lesson_id)
             intro = "\n".join(lesson["intro"][:3]) if lesson and "intro" in lesson else ""
+            # Send lesson topic to user, handling both message and callback query
             if update.message:
                 return await update.message.reply_text(
                     t("TOPIC", lang, title=lesson["title"] if lesson else "", level=level, intro=intro),
                     parse_mode="Markdown"
                 )
+            elif hasattr(update, 'callback_query') and update.callback_query:
+                query = update.callback_query
+                if hasattr(query, 'edit_message_text'):
+                    return await query.edit_message_text(
+                        t("TOPIC", lang, title=lesson["title"] if lesson else "", level=level, intro=intro),
+                        parse_mode="Markdown"
+                    )
+                # fallback: try sending a new message if possible
+                if hasattr(query, 'message') and query.message and hasattr(query.message, 'chat') and hasattr(query.message.chat, 'id') and hasattr(ctx, 'bot'):
+                    chat_id = query.message.chat.id
+                    return await ctx.bot.send_message(
+                        chat_id=chat_id,
+                        text=t("TOPIC", lang, title=lesson["title"] if lesson else "", level=level, intro=intro),
+                        parse_mode="Markdown"
+                    )
             return
         except Exception as e:
             logger.warning(f"[TG] lesson gen fail: {e}")
@@ -1064,11 +1080,27 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_te
                 ) if lesson else None
                 engine.set_session(wa_id, "lesson", 0, 0, lesson_id)
                 intro = "\n".join(lesson["intro"][:3]) if lesson and "intro" in lesson else ""
+                # Send lesson topic to user, handling both message and callback query
                 if update.message:
                     return await update.message.reply_text(
                         t("TOPIC", lang, title=lesson["title"] if lesson else "", level=level, intro=intro),
                         parse_mode="Markdown"
                     )
+                elif hasattr(update, 'callback_query') and update.callback_query:
+                    query = update.callback_query
+                    if hasattr(query, 'edit_message_text'):
+                        return await query.edit_message_text(
+                            t("TOPIC", lang, title=lesson["title"] if lesson else "", level=level, intro=intro),
+                            parse_mode="Markdown"
+                        )
+                    # fallback: try sending a new message if possible
+                    if hasattr(query, 'message') and query.message and hasattr(query.message, 'chat') and hasattr(query.message.chat, 'id') and hasattr(ctx, 'bot'):
+                        chat_id = query.message.chat.id
+                        return await ctx.bot.send_message(
+                            chat_id=chat_id,
+                            text=t("TOPIC", lang, title=lesson["title"] if lesson else "", level=level, intro=intro),
+                            parse_mode="Markdown"
+                        )
                 return
             if update.message:
                 return await update.message.reply_text(t("INVALID_CHOICE", lang))
@@ -1405,11 +1437,27 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             ) if lesson else None
             engine.set_session(wa_id, "lesson", 0, 0, lesson_id)
             intro = "\n".join(lesson["intro"][:3]) if lesson and "intro" in lesson else ""
+            # Send lesson topic to user, handling both message and callback query
             if update.message:
                 return await update.message.reply_text(
                     t("TOPIC", lang, title=lesson["title"] if lesson else "", level=level, intro=intro),
                     parse_mode="Markdown"
                 )
+            elif hasattr(update, 'callback_query') and update.callback_query:
+                query = update.callback_query
+                if hasattr(query, 'edit_message_text'):
+                    return await query.edit_message_text(
+                        t("TOPIC", lang, title=lesson["title"] if lesson else "", level=level, intro=intro),
+                        parse_mode="Markdown"
+                    )
+                # fallback: try sending a new message if possible
+                if hasattr(query, 'message') and query.message and hasattr(query.message, 'chat') and hasattr(query.message.chat, 'id') and hasattr(ctx, 'bot'):
+                    chat_id = query.message.chat.id
+                    return await ctx.bot.send_message(
+                        chat_id=chat_id,
+                        text=t("TOPIC", lang, title=lesson["title"] if lesson else "", level=level, intro=intro),
+                        parse_mode="Markdown"
+                    )
             return
         if query:
             return await query.answer(t("INVALID_CHOICE", lang), show_alert=True)
@@ -1474,9 +1522,9 @@ if __name__ == "__main__":
     app.add_handler(CommandHandler("profile", profile_cmd))
     app.add_handler(CommandHandler("stats", stats_cmd))
     app.add_handler(CommandHandler("reset", reset_cmd))
-    app.add_handler(MessageHandler(filters.CONTACT, contact_handler))
+
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_handler))
     app.add_handler(CallbackQueryHandler(on_button))
 
-    print("🤖 Telegram bot is running… press Ctrl+C to stop.")
+    # Run the bot
     app.run_polling()

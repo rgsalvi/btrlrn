@@ -36,15 +36,27 @@ def profile_missing_for_flow(user):
 def subjects_for_user(wa_id):
     # Returns list of subjects available for the user (from user profile)
     user = rowdict(engine.get_user(wa_id))
-    if not user: return []
+    if not user:
+        return ["Mathematics", "Science", "English", "Social Science"]
     board, grade = user.get("board"), user.get("grade")
-    if not board or not grade: return []
-    # Use engine helper if available, else fallback to static
+    state = user.get("state")
+    if not board or not grade:
+        return ["Mathematics", "Science", "English", "Social Science"]
+    # If board is a state board, use the state name for subject lookup
+    board_norm = None
+    if board.strip().upper().startswith("STATE") and state:
+        board_norm = state.strip().title()
+    else:
+        board_norm = board.strip().upper()
     try:
-        return engine.subjects_for(board, grade)
+        subs = engine.subjects_for(board_norm, grade)
+        if not subs:
+            # fallback if no subjects found for this board/grade
+            return ["Mathematics", "Science", "English", "Social Science"]
+        return subs
     except Exception:
         # Fallback: common subjects
-        return ["Maths", "Science", "English", "Social Science"]
+        return ["Mathematics", "Science", "English", "Social Science"]
 
 def parse_board_choice(text):
     # Parse board choice from user input (A/B/C or CBSE/ICSE/State)
@@ -338,7 +350,7 @@ CAT = {
         "RANK": "🏆 लीडरबोर्ड (MVP):\n1) तुम्ही — 3\n2) Student B — 2\n3) Student C — 1",
         "RESET_OK": "सत्र रीसेट. START लिहा.",
         "STATS_HEADER": "📈 अलीकडील क्विझ:",
-        "STATS_EMPTY": "अजून क्विझ नाही. START लिहा!",
+        "STATS_EMPTY": "अजून क्विज़ नाही. START लिहा!",
     },
 }
 

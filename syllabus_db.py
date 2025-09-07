@@ -49,32 +49,26 @@ if __name__ == '__main__':
     # Syllabus topics for Grades 6 to 12
     syllabus_data = {
         6: {
-            'English': [
-                'Who Did Patrick’s Homework?', 'A House, A Home', 'How the Dog Found Himself a New Master!', 'The Kite', 'Taro’s Reward', 'The Quarrel', 'An Indian – American Woman in Space: Kalpana Chawla', 'Beauty', 'A Different Kind of School', 'Where Do All the Teachers Go?', 'Who I Am', 'The Wonderful Words', 'Fair Play', 'A Tale of Two Birds', 'The Friendly Mongoose', 'The Shepherd’s Treasure', 'The Old-Clock Shop', 'Tansen', 'The Monkey and the Crocodile', 'The Wonder Called Sleep', 'A Pact with the Sun', 'What Happened to the Reptiles', 'A Strange Wrestling Match'
+            'Marathi': [
+                'आम्ही सारे सरदार', 'शाळा', 'माझे कुटुंब', 'माझे गाव', 'माझे छंद', 'माझे आवडते फळ', 'माझा आवडता प्राणी', 'माझा आवडता खेळ', 'माझा आवडता सण', 'माझा आवडता ऋतू', 'माझा आवडता मित्र', 'माझा आवडता शिक्षक', 'माझे स्वप्न', 'माझा भारत देश', 'माझे शाळेतील जीवन', 'माझे आवडते पुस्तक', 'माझा आवडता नेता', 'माझा आवडता कवी', 'माझा आवडता लेखक', 'माझा आवडता क्रीडापटू'
             ],
             'Hindi': [
-                'वह चिड़िया जो', 'बचपन', 'नादान दोस्त', 'चाँद से थोड़ी सी गप्पें', 'अंतरिक्ष में मानव', 'यात्रा की तैयारी', 'राख की रस्सी', 'कक्षा का काम', 'झरना', 'पर्वत', 'संसार का सबसे बड़ा आदमी', 'टिकट अलबम', 'घर', 'पानी की कहानी', 'एक टोकरी भर मिट्टी'
+                'हमारा देश', 'मेरा परिवार', 'मेरा विद्यालय', 'मेरा मित्र', 'मेरा प्रिय खेल', 'मेरा प्रिय त्योहार', 'मेरा प्रिय फल', 'मेरा प्रिय जानवर', 'मेरा प्रिय ऋतु', 'मेरा प्रिय शिक्षक', 'मेरा सपना', 'मेरा भारत', 'मेरा शौक', 'मेरा प्रिय पुस्तक', 'मेरा प्रिय नेता', 'मेरा प्रिय कवि', 'मेरा प्रिय लेखक', 'मेरा प्रिय क्रीड़ापटु'
+            ],
+            'English': [
+                "Don't Give Up!", "Who's the Greatest?", "The Worth of a Fabric", "The Phantom Dog", "The King's Choice", "The Silver House", "The Never-Never Nest", "The Road Not Taken", "The Story of Gautama's Quest", "The Value of Time", "The Power of Determination", "The World of Plants", "The World of Animals", "The World of Birds", "The World of Insects"
             ],
             'Mathematics': [
-                'Knowing Our Numbers', 'Whole Numbers', 'Playing with Numbers', 'Basic Geometrical Ideas', 'Understanding Elementary Shapes', 'Integers', 'Fractions', 'Decimals', 'Data Handling', 'Mensuration', 'Algebra', 'Ratio and Proportion', 'Symmetry', 'Practical Geometry'
+                'Basic Concepts in Geometry', 'Integers', 'Fractions', 'Decimals', 'Ratio and Proportion', 'Algebraic Expressions', 'Mensuration', 'Data Handling', 'Symmetry', 'Practical Geometry', 'Playing with Numbers', 'Understanding Elementary Shapes', 'Whole Numbers', 'Knowing Our Numbers'
             ],
-            'Science': [
-                'Food: Where Does It Come From?', 'Components of Food', 'Fibre to Fabric', 'Sorting Materials into Groups', 'Separation of Substances', 'Changes Around Us', 'Getting to Know Plants', 'Body Movements', 'The Living Organisms and Their Surroundings', 'Motion and Measurement of Distances', 'Light, Shadows and Reflections', 'Electricity and Circuits', 'Fun with Magnets', 'Water', 'Air Around Us', 'Garbage In, Garbage Out'
+            'Science and Technology': [
+                'Our Earth and Our Solar System', 'The Living World', 'Diversity in Living Things', 'Substances in the Surroundings', 'Changes Around Us', 'Measurement and Motion', 'Energy', 'Simple Machines', 'The Environment', 'Food and Nutrition', 'Health and Hygiene', 'Materials and Solutions', 'Natural Resources', 'Our Universe'
             ],
-            'History': [
-                'What, Where, How and When?', 'On the Trail of the Earliest People', 'From Gathering to Growing Food', 'In the Earliest Cities', 'What Books and Burials Tell Us', 'Kingdoms, Kings and an Early Republic', 'New Questions and Ideas', 'Ashoka, The Emperor Who Gave Up War', 'Vital Villages, Thriving Towns', 'Traders, Kings and Pilgrims', 'New Empires and Kingdoms', 'Buildings, Paintings and Books'
+            'History and Civics': [
+                'The Indian Subcontinent and History', 'Sources of History', 'The Harappan Civilization', 'The Vedic Civilization', 'Religious Trends in Ancient India', 'Janapadas and Mahajanapadas', 'The First Empire of India: The Mauryas', 'The Age of Regional Kingdoms', 'The Gupta Age', 'The Age of Small Kingdoms', 'The Cholas', 'The Delhi Sultanate', 'The Mughal Empire', 'The Maratha Empire', 'The British Rule in India', 'The Freedom Struggle', 'Civics: Our Constitution', 'Civics: Local Government', 'Civics: Our Rights and Duties'
             ],
             'Geography': [
-                'The Earth in the Solar System', 'Globe: Latitudes and Longitudes', 'Motions of the Earth', 'Maps', 'Major Domains of the Earth', 'Major Landforms of the Earth', 'Our Country – India', 'India: Climate, Vegetation and Wildlife'
-            ],
-            'Civics': [
-                'Understanding Diversity', 'Diversity and Discrimination', 'What is Government?', 'Key Elements of a Democratic Government', 'Panchayati Raj', 'Rural Administration', 'Urban Administration', 'Rural Livelihoods', 'Urban Livelihoods'
-            ],
-            'Sanskrit': [
-                'शुक्लः सर्पः', 'स्वर्णकाकः', 'कस्मै धेनुः', 'सूक्तिः', 'सुभाषितानि', 'बालकः', 'क्रीडास्पर्धा', 'अहं बालकः', 'मम विद्यालयः', 'कृषकः'
-            ],
-            'Computer Science': [
-                'Introduction to Computers', 'Parts of a Computer', 'Input and Output Devices', 'Computer Memory', 'Operating System Basics', 'Word Processing', 'Internet Basics'
+                'The Earth and the Graticule', 'Let us Use the Graticule', 'Comparing a Globe and a Map', 'Field Visits', 'Weather and Climate', 'The Structure of the Earth', 'The Sun, the Moon and the Earth', 'The Motions of the Earth', 'The Interior of the Earth', 'Rocks and Soils', 'Natural Regions', 'Population', 'Natural Resources', 'Conservation of Resources', 'Disaster Management'
             ]
         },
         7: {
@@ -267,10 +261,13 @@ if __name__ == '__main__':
     }
 
     # Insert all topics for Grades 6 to 12
-    for grade in range(6, 13):
+    for grade in syllabus_data:
+        board = 'Maharashtra' if grade == 6 else 'CBSE'  # Add logic for other boards as needed
+        academic_year = '2025-26'
         if grade not in syllabus_data:
             continue
         for subject, topics in syllabus_data[grade].items():
+            subject_desc = {}  # Optionally add subject descriptions
             for topic in topics:
                 insert_syllabus(board, grade, subject, academic_year, topic, subject_desc.get(subject, ''))
 

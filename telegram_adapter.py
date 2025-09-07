@@ -749,14 +749,29 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_te
                     return await update.message.reply_text(t("INVALID_CHOICE", lang), reply_markup=kb_grades(lang))
                 return
             engine.upsert_user(wa_id, grade=g, subject="Mathematics", level=1, streak=0)
-            subs = subjects_for_user(wa_id)
-            engine.set_session(wa_id, "choose_subject")
+            # Show profile summary and ask for confirmation
+            u = rowdict(engine.get_user(wa_id))
+            profile_lines = []
+            profile_lines.append("Please review your profile:")
+            if u:
+                profile_lines.append(f"A) Name: {u.get('first_name','')} {u.get('last_name','')}")
+                profile_lines.append(f"B) City: {u.get('city','')}")
+                profile_lines.append(f"C) State/Curriculum: {u.get('state','') or u.get('board','')}")
+                profile_lines.append(f"D) Grade: {u.get('grade','')}")
+                profile_lines.append(f"E) Subject: {u.get('subject','')}")
+            else:
+                profile_lines.append("(Profile data not found)")
+            profile_lines.append("")
+            profile_lines.append("Is this correct?")
+            msg = "\n".join(profile_lines)
+            # Inline buttons: Confirm / Edit Profile
+            kb = InlineKeyboardMarkup([
+                [InlineKeyboardButton("✅ Confirm", callback_data="PROFILE_CONFIRM"),
+                 InlineKeyboardButton("✏️ Edit", callback_data="PROFILE_EDIT")]
+            ])
+            engine.set_session(wa_id, "profile_confirm")
             if update.message:
-                await update.message.reply_text(f"{t('PROFILE_SAVED', lang)}")
-                return await update.message.reply_text(
-                    f"{step_header(lang, 9, 'SUBJECT')}\n{t('ASK_SUBJECT', lang)}",
-                    reply_markup=kb_subjects(subs)
-                )
+                return await update.message.reply_text(msg, reply_markup=kb)
             return
 
         if update.message:
@@ -991,6 +1006,54 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_te
     return
 
 async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query if hasattr(update, 'callback_query') else None
+    data = query.data if query and hasattr(query, 'data') else ""
+    # Profile confirmation step
+    if data == "PROFILE_CONFIRM":
+        wa_id = ""
+        if query and getattr(query, 'message', None):
+            chat_obj = getattr(query.message, 'chat', None)
+            if chat_obj and hasattr(chat_obj, 'id'):
+                wa_id = f"telegram:{chat_obj.id}"
+        lang = get_lang(wa_id)
+        engine.set_session(wa_id, "choose_subject")
+        subs = subjects_for_user(wa_id)
+        if query:
+            await query.edit_message_text(t("PROFILE_SAVED", lang))
+            chat_id = None
+            if query.message and getattr(query.message, 'chat', None) and hasattr(query.message.chat, 'id'):
+                chat_id = query.message.chat.id
+            if chat_id:
+                return await ctx.bot.send_message(chat_id=chat_id,
+                    text=f"{step_header(lang, 9, 'SUBJECT')}\n{t('ASK_SUBJECT', lang)}",
+                    reply_markup=kb_subjects(subs))
+        return
+
+    if data == "PROFILE_EDIT":
+        wa_id = ""
+        if query and getattr(query, 'message', None):
+            chat_obj = getattr(query.message, 'chat', None)
+            if chat_obj and hasattr(chat_obj, 'id'):
+                wa_id = f"telegram:{chat_obj.id}"
+        lang = get_lang(wa_id)
+        engine.set_session(wa_id, "profile_menu")
+        u = rowdict(engine.get_user(wa_id))
+        profile_lines = []
+        if u:
+            profile_lines.append("Your current profile:")
+            profile_lines.append(f"A) Name: {u.get('first_name','')} {u.get('last_name','')}")
+            profile_lines.append(f"B) City: {u.get('city','')}")
+            profile_lines.append(f"C) State/Curriculum: {u.get('state','') or u.get('board','')}")
+            profile_lines.append(f"D) Grade: {u.get('grade','')}")
+            profile_lines.append(f"E) Subject: {u.get('subject','')}")
+            profile_lines.append("")
+        else:
+            profile_lines.append("(Profile data not found)")
+        profile_lines.append(t("PROFILE_CMD", lang))
+        msg = "\n".join(profile_lines)
+        if query:
+            return await query.edit_message_text(msg)
+        return
     # Handle START button callback
     if update and getattr(update, 'callback_query', None) and getattr(update.callback_query, 'data', None) == "START":
         query = update.callback_query

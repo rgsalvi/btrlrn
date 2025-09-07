@@ -886,29 +886,31 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_te
             return await update.message.reply_text(t("CONTINUE", lang), reply_markup=kb_continue())
         return
 
+    # When generating a lesson (START), use per-subject level
     if up == "START":
         if update.message:
             await update.message.reply_text(t("GENERATING", lang))
         try:
             user = rowdict(engine.get_user(wa_id))
-            level = user.get("level") if user and "level" in user else 1
-            trouble = engine.recent_trouble_concepts(wa_id, user.get("subject")) if user else None
+            subject = user.get("subject") if user else None
+            level = get_user_subject_level(wa_id, subject) if subject else 1
+            trouble = engine.recent_trouble_concepts(wa_id, subject) if user else None
             raw_lesson = engine.ai_generate_lesson(
                 board=user.get("board") if user else None,
                 grade=user.get("grade") if user else None,
-                subject_label=user.get("subject") if user else None,
+                subject_label=subject,
                 level=level,
                 city=user.get("city") if user else None,
                 state=user.get("state") if user else None,
                 recent_mistakes=trouble,
                 wa_id=wa_id
-            ) if user else None
+            ) if subject else None
             lesson = translate_lesson_if_needed(raw_lesson, lang) if raw_lesson else None
             lesson_id = engine.save_lesson(
                 wa_id=wa_id,
                 board=user.get("board") if user else None,
                 grade=user.get("grade") if user else None,
-                subject_label=user.get("subject") if user else None,
+                subject_label=subject,
                 level=level,
                 title=lesson["title"] if lesson else None,
                 intro=lesson["intro"] if lesson else None,
@@ -917,10 +919,13 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_te
             engine.set_session(wa_id, "lesson", 0, 0, lesson_id)
             intro = "\n".join(lesson["intro"][:3]) if lesson and "intro" in lesson else ""
             if update.message:
-                return await update.message.reply_text(t("TOPIC", lang, title=lesson["title"] if lesson else "", level=level, intro=intro), parse_mode="Markdown")
+                return await update.message.reply_text(
+                    t("TOPIC", lang, title=lesson["title"] if lesson else "", level=level, intro=intro),
+                    parse_mode="Markdown"
+                )
             return
         except Exception as e:
-            logger.error(f"[TG] AI generation error: {e}")
+            logger.warning(f"[TG] lesson gen fail: {e}")
             if update.message:
                 return await update.message.reply_text(t("AI_ERROR", lang))
             return
@@ -1016,11 +1021,14 @@ async def text_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE, forced_te
             subs = subjects_for_user(wa_id)
             i = ord(up) - ord('A')
             if 0 <= i < len(subs):
-                # Set subject and reset level
-                engine.upsert_user(wa_id, subject=subs[i], level=1)
+                # Set subject, but do NOT reset level; fetch last level for this subject
+                chosen_subject = subs[i]
+                engine.upsert_user(wa_id, subject=chosen_subject)
+                # Ensure entry exists in user_subjects
+                level = get_user_subject_level(wa_id, chosen_subject)
+                set_user_subject_level(wa_id, chosen_subject, level)
                 user = rowdict(engine.get_user(wa_id)) or {}
-                level = user.get("level", 1)
-                subject = user.get("subject", "")
+                subject = chosen_subject
                 lang = get_lang(wa_id)
                 # Confirm subject/level to user
                 if update.message:
@@ -1177,8 +1185,8 @@ async def on_button(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         if chat_id and hasattr(ctx, 'bot'):
             await ctx.bot.send_chat_action(chat_id=chat_id, action="typing")
         # Generate lesson
-        level = user["level"] if user and "level" in user and user["level"] else 1
         subject = user["subject"] if user and "subject" in user else None
+        level = get_user_subject_level(wa_id, subject) if subject else 1
         trouble = engine.recent_trouble_concepts(wa_id, subject)
         raw_lesson = engine.ai_generate_lesson(
             board=user.get("board") if user else None,

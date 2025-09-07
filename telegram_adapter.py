@@ -553,7 +553,7 @@ async def contact_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 def profile_missing_for_flow(u) -> bool:
     if not u: return True
-    required = ("first_name","last_name","dob","phone","city","board","grade")
+    required = ("first_name","last_name","dob","city","board","grade")
     return any((k not in u or u[k] is None or u[k] == "") for k in required)
 
 def parse_board_choice(text: str) -> str | None:

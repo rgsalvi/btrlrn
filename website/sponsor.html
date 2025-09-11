@@ -34,8 +34,20 @@
             }
         }
     </script>
+    <script src="https://unpkg.com/i18next@23.6.1/dist/umd/i18next.min.js"></script>
+    <script src="https://unpkg.com/i18next-browser-languagedetector@7.0.1/dist/umd/i18nextBrowserLanguageDetector.min.js"></script>
+    <script src="https://unpkg.com/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script src="https://unpkg.com/jquery-i18next@1.2.1/dist/umd/jquery-i18next.min.js"></script>
 </head>
 <body class="font-sans text-brand-teal bg-gradient-to-br from-white via-brand-light/60 to-white min-h-screen">
+    <!-- DEBUG: Test translation element -->
+    <div class="text-center text-lg font-bold mb-2">
+      <span data-i18n="sponsor_title"></span>
+    </div>
+    <div class="flex justify-end max-w-7xl mx-auto px-4 pt-4">
+  <span class="px-3 py-1 rounded border border-brand-teal bg-brand-teal text-white font-semibold">English</span>
+  <a href="sponsor_hi.html" class="px-3 py-1 rounded border border-brand-teal text-brand-teal bg-white hover:bg-brand-yellow hover:text-brand-teal font-semibold transition">हिन्दी</a>
+    </div>
     <!-- Sticky Header -->
     <header class="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-brand-light shadow-sm">
         <div class="max-w-7xl mx-auto flex items-center justify-between px-6 lg:px-8 py-3">
@@ -81,45 +93,44 @@
         <img src="roller-skating.png" alt="Roller skating illustration"
           class="absolute left-1/2 -translate-x-1/2 bottom-[-3.5rem] w-20 sm:w-32 md:left-auto md:right-[-12rem] md:bottom-[-10rem] md:w-60 lg:w-[22rem] xl:w-[28rem] opacity-32 pointer-events-none select-none float-anim z-0" />
         <div class="bg-white/95 rounded-3xl border border-brand-light shadow-soft p-8 lg:p-12 flex flex-col relative z-10">
-          <h1 class="text-4xl lg:text-5xl font-extrabold tracking-tight text-brand-teal leading-tight text-center mb-4">Partner with btrlrn</h1>
+          <h1 class="text-4xl lg:text-5xl font-extrabold tracking-tight text-brand-teal leading-tight text-center mb-4" data-i18n="sponsor_title">Partner with btrlrn</h1>
           <div class="text-lg text-brand-teal/90 mb-6 text-center">
-            <p><strong>btrlrn</strong> is on a mission to make high-quality, adaptive learning accessible to every child. We welcome sponsors and CSR partners who share our vision for educational equity and impact.</p>
+            <p data-i18n="sponsor_intro"><strong>btrlrn</strong> is on a mission to make high-quality, adaptive learning accessible to every child. We welcome sponsors and CSR partners who share our vision for educational equity and impact.</p>
           </div>
           <div class="mb-6">
-            <h2 class="text-xl font-bold text-brand-teal mb-2">How you can help:</h2>
+            <h2 class="text-xl font-bold text-brand-teal mb-2" data-i18n="how_help_title">How you can help:</h2>
             <ul class="list-disc pl-6 text-brand-teal/80 text-base">
-              <li>Support our outreach to underserved communities</li>
-              <li>Sponsor prizes, scholarships, or recognition for top learners</li>
-              <li>Fund textbooks, learning materials, or digital content for students</li>
-              <li>Provide technology, devices, or internet access to learners in need</li>
-              <li>Collaborate on CSR initiatives, pilot programs, or educational campaigns</li>
-              <li>Offer mentorship, workshops, or volunteering opportunities</li>
+              <li data-i18n="help_1">Support our outreach to underserved communities</li>
+              <li data-i18n="help_2">Sponsor prizes, scholarships, or recognition for top learners</li>
+              <li data-i18n="help_3">Fund textbooks, learning materials, or digital content for students</li>
+              <li data-i18n="help_4">Provide technology, devices, or internet access to learners in need</li>
+              <li data-i18n="help_5">Collaborate on CSR initiatives, pilot programs, or educational campaigns</li>
+              <li data-i18n="help_6">Offer mentorship, workshops, or volunteering opportunities</li>
             </ul>
           </div>
-          <p class="mb-6 text-brand-teal/80 text-center">Fill out the form below and our team will get in touch with you soon.</p>
+          <p class="mb-6 text-brand-teal/80 text-center" data-i18n="form_prompt">Fill out the form below and our team will get in touch with you soon.</p>
           <div id="sponsor-form-wrapper">
             <form class="flex flex-col gap-4">
-              <label for="name" class="font-semibold">Your Name</label>
+              <label for="name" class="font-semibold" data-i18n="form_name">Your Name</label>
               <input type="text" id="name" name="name" required class="p-3 border border-brand-light rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-teal/40">
 
-              <label for="email" class="font-semibold">Email Address</label>
+              <label for="email" class="font-semibold" data-i18n="form_email">Email Address</label>
               <input type="email" id="email" name="email" required class="p-3 border border-brand-light rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-teal/40">
 
-              <label for="org" class="font-semibold">Organization (optional)</label>
+              <label for="org" class="font-semibold" data-i18n="form_org">Organization (optional)</label>
               <input type="text" id="org" name="organization" class="p-3 border border-brand-light rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-teal/40">
 
-              <label for="message" class="font-semibold">Message</label>
+              <label for="message" class="font-semibold" data-i18n="form_message">Message</label>
               <textarea id="message" name="message" required placeholder="How would you like to help or collaborate?" class="p-3 border border-brand-light rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-teal/40 min-h-[100px]"></textarea>
 
-              <button type="submit" class="bg-brand-teal text-white rounded-lg py-3 px-6 font-bold text-lg mt-2 hover:bg-brand-yellow hover:text-brand-teal transition">Send Message</button>
+              <button type="submit" class="bg-brand-teal text-white rounded-lg py-3 px-6 font-bold text-lg mt-2 hover:bg-brand-yellow hover:text-brand-teal transition" data-i18n="form_send">Send Message</button>
               <div id="form-status" class="mt-2 text-center text-base font-semibold"></div>
             </form>
           </div>
           <div id="thank-you-message" class="hidden text-center text-green-700 font-semibold text-lg py-8">
             Thank you! Your message has been sent.
           </div>
-          <div class="mt-6 text-center text-brand-teal/70 text-base">
-            Or email us directly at <a href="mailto:support@btrlrn.com" class="underline decoration-brand-yellow/60 hover:decoration-brand-yellow">support@btrlrn.com</a>
+          <div class="mt-6 text-center text-brand-teal/70 text-base" data-i18n="or_email">Or email us directly at <a href="mailto:support@btrlrn.com" class="underline decoration-brand-yellow/60 hover:decoration-brand-yellow">support@btrlrn.com</a>
           </div>
         </div>
       </div>
@@ -212,6 +223,71 @@
                 });
             }
         });
+    </script>
+    <script>
+    // i18next language setup
+    const resources = {
+      en: {
+        translation: {
+          sponsor_title: "Partner with btrlrn",
+          sponsor_intro: "<strong>btrlrn</strong> is on a mission to make high-quality, adaptive learning accessible to every child. We welcome sponsors and CSR partners who share our vision for educational equity and impact.",
+          how_help_title: "How you can help:",
+          help_1: "Support our outreach to underserved communities",
+          help_2: "Sponsor prizes, scholarships, or recognition for top learners",
+          help_3: "Fund textbooks, learning materials, or digital content for students",
+          help_4: "Provide technology, devices, or internet access to learners in need",
+          help_5: "Collaborate on CSR initiatives, pilot programs, or educational campaigns",
+          help_6: "Offer mentorship, workshops, or volunteering opportunities",
+          form_prompt: "Fill out the form below and our team will get in touch with you soon.",
+          form_name: "Your Name",
+          form_email: "Email Address",
+          form_org: "Organization (optional)",
+          form_message: "Message",
+          form_send: "Send Message",
+          or_email: "Or email us directly at <a href=\"mailto:support@btrlrn.com\" class=\"underline decoration-brand-yellow/60 hover:decoration-brand-yellow\">support@btrlrn.com</a>"
+        }
+      },
+      hi: {
+        translation: {
+          sponsor_title: "btrlrn के साथ साझेदारी करें",
+          sponsor_intro: "<strong>btrlrn</strong> का मिशन हर बच्चे के लिए उच्च गुणवत्ता वाली, अनुकूली शिक्षा सुलभ बनाना है। हम उन प्रायोजकों और CSR भागीदारों का स्वागत करते हैं जो शैक्षिक समानता और प्रभाव के हमारे दृष्टिकोण को साझा करते हैं।",
+          how_help_title: "आप कैसे मदद कर सकते हैं:",
+          help_1: "कमज़ोर समुदायों तक हमारी पहुँच का समर्थन करें",
+          help_2: "शीर्ष शिक्षार्थियों के लिए पुरस्कार, छात्रवृत्ति या मान्यता प्रायोजित करें",
+          help_3: "छात्रों के लिए पाठ्यपुस्तकें, अध्ययन सामग्री या डिजिटल सामग्री प्रदान करें",
+          help_4: "जरूरतमंद शिक्षार्थियों को तकनीक, डिवाइस या इंटरनेट एक्सेस प्रदान करें",
+          help_5: "CSR पहलों, पायलट कार्यक्रमों या शैक्षिक अभियानों में सहयोग करें",
+          help_6: "मार्गदर्शन, कार्यशालाओं या स्वयंसेवी अवसरों की पेशकश करें",
+          form_prompt: "नीचे फॉर्म भरें और हमारी टीम आपसे जल्द संपर्क करेगी।",
+          form_name: "आपका नाम",
+          form_email: "ईमेल पता",
+          form_org: "संगठन (वैकल्पिक)",
+          form_message: "संदेश",
+          form_send: "संदेश भेजें",
+          or_email: "या हमें सीधे <a href=\"mailto:support@btrlrn.com\" class=\"underline decoration-brand-yellow/60 hover:decoration-brand-yellow\">support@btrlrn.com</a> पर ईमेल करें"
+        }
+      }
+    };
+
+    i18next.use(i18nextBrowserLanguageDetector).init({
+      resources,
+      fallbackLng: 'en',
+      debug: false
+    }, function(err, t) {
+      jqueryI18next.init(i18next, $, { useOptionsAttr: true });
+      $('body').localize();
+      // Force localization after DOM is fully loaded
+      document.addEventListener('DOMContentLoaded', function() {
+        $('body').localize();
+      });
+    });
+
+    $('#lang-en').on('click', function() {
+      i18next.changeLanguage('en', () => $('body').localize());
+    });
+    $('#lang-hi').on('click', function() {
+      i18next.changeLanguage('hi', () => $('body').localize());
+    });
     </script>
 </body>
 </html>

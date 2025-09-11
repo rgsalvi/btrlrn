@@ -1,0 +1,375 @@
+<html lang="hi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>btrlrn — बेहतर शिक्षा, हर दिन</title>
+  <!-- Social Sharing Meta Tags -->
+  <meta property="og:title" content="btrlrn — बेहतर शिक्षा, हर दिन" />
+  <meta property="og:description" content="अनुकूली, एआई-संचालित शिक्षा आपके बच्चे की गति से। 100% मुफ्त। माता-पिता द्वारा विश्वसनीय।" />
+  <meta property="og:image" content="btrlrn_logo.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:alt" content="btrlrn लोगो" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://btrlrn.com/" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="btrlrn — बेहतर शिक्षा, हर दिन" />
+  <meta name="twitter:description" content="अनुकूली, एआई-संचालित शिक्षा आपके बच्चे की गति से। 100% मुफ्त। माता-पिता द्वारा विश्वसनीय।" />
+  <meta name="twitter:image" content="btrlrn_logo.png" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              teal: '#004F57',
+              light: '#E6F7F8',
+              yellow: '#FFD33D'
+            }
+          },
+          fontFamily: {
+            sans: ["Poppins", "ui-sans-serif", "system-ui", "-apple-system", "Segoe UI", "Roboto", "Inter", "Noto Sans", "sans-serif"]
+          },
+          boxShadow: {
+            soft: '0 10px 25px rgba(0,0,0,0.06)'
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+  <link rel="manifest" href="site.webmanifest">
+  <link rel="shortcut icon" href="favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    .float-anim { animation: floatY 4s ease-in-out infinite; }
+    @keyframes floatY { 0% { transform: translateY(0); } 50% { transform: translateY(-18px); } 100% { transform: translateY(0); } }
+    .swing-anim { transform-origin: 80% 10%; animation: swingGirl 3.5s cubic-bezier(.36,.07,.19,.97) infinite alternate; }
+    @keyframes swingGirl { 0% { transform: rotate(-10deg); } 50% { transform: rotate(8deg); } 100% { transform: rotate(-10deg); } }
+    .section-animate { opacity: 0; transform: translateY(40px); transition: opacity 0.9s cubic-bezier(.4,0,.2,1), transform 0.9s cubic-bezier(.4,0,.2,1); }
+    .section-animate.visible { opacity: 1; transform: none; }
+  </style>
+</head>
+<body class="font-sans text-brand-teal bg-gradient-to-br from-white via-brand-light/60 to-white min-h-screen">
+  <!-- Sticky Header -->
+  <header class="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-brand-light shadow-sm">
+    <div class="max-w-7xl mx-auto flex items-center justify-between px-6 lg:px-8 py-3">
+      <div class="flex items-center gap-4">
+        <a href="index_hi.html">
+          <img src="btrlrn_logo_symbol.png" alt="btrlrn लोगो" class="w-16 h-16 drop-shadow-lg rounded-full border-2 border-brand-teal bg-white p-1" />
+        </a>
+        <span class="text-3xl lg:text-4xl font-extrabold text-brand-teal tracking-tight drop-shadow-sm" style="letter-spacing:-1px;">btrlrn</span>
+      </div>
+      <!-- Desktop Nav -->
+      <nav class="hidden md:flex gap-8 text-brand-teal font-semibold text-base">
+        <a href="#how-it-works" class="hover:text-brand-yellow transition">कैसे काम करता है</a>
+        <a href="#for-parents" class="hover:text-brand-yellow transition">माता-पिता के लिए</a>
+        <a href="#testimonials" class="hover:text-brand-yellow transition">प्रशंसापत्र</a>
+        <a href="#faqs" class="hover:text-brand-yellow transition">सामान्य प्रश्न</a>
+        <a href="#contact" class="hover:text-brand-yellow transition">संपर्क करें</a>
+        <a href="sponsor_hi.html" class="hover:text-brand-yellow transition">सहयोग करें!</a>
+      </nav>
+      <!-- Mobile Nav -->
+      <div class="md:hidden relative">
+        <button id="mobile-menu-btn" class="flex items-center px-3 py-2 border rounded text-brand-teal border-brand-teal focus:outline-none" aria-label="Open menu">
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <div id="mobile-menu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-brand-light z-50">
+          <a href="#how-it-works" class="block px-6 py-3 text-brand-teal hover:bg-brand-light/60">कैसे काम करता है</a>
+          <a href="#for-parents" class="block px-6 py-3 text-brand-teal hover:bg-brand-light/60">माता-पिता के लिए</a>
+          <a href="#testimonials" class="block px-6 py-3 text-brand-teal hover:bg-brand-light/60">प्रशंसापत्र</a>
+          <a href="#faqs" class="block px-6 py-3 text-brand-teal hover:bg-brand-light/60">सामान्य प्रश्न</a>
+          <a href="#contact" class="block px-6 py-3 text-brand-teal hover:bg-brand-light/60">संपर्क करें</a>
+          <a href="sponsor_hi.html" class="block px-6 py-3 text-brand-teal hover:bg-brand-light/60">सहयोग करें!</a>
+        </div>
+      </div>
+      <!-- Language Switcher -->
+      <div class="flex gap-2 items-center ml-4">
+        <a href="index.html" class="px-3 py-1 rounded border border-brand-teal text-brand-teal bg-white hover:bg-brand-yellow hover:text-brand-teal font-semibold transition">English</a>
+        <span class="px-3 py-1 rounded border border-brand-teal bg-brand-teal text-white font-semibold">हिन्दी</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="relative overflow-hidden bg-gradient-to-br from-brand-light/80 to-white/60 pt-14 pb-20 lg:pt-24 lg:pb-32 section-animate">
+    <div class="max-w-screen-xl mx-auto px-4 sm:px-8">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+        <!-- Left Card: Text Content Only -->
+        <div class="bg-white/95 rounded-3xl border border-brand-light shadow-soft p-8 flex flex-col">
+          <div class="flex flex-col items-center">
+            <img src="reading.png" alt="पढ़ाई करते बच्चे का चित्रण" class="w-48 h-auto md:w-56 mb-6" />
+            <div class="flex flex-wrap items-center gap-4 mb-6 justify-center">
+              <span class="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2 shadow-soft border border-brand-light text-base text-brand-teal/90 font-semibold"><span class="h-3 w-3 rounded-full bg-green-600"></span>100% मुफ्त। हमेशा।</span>
+              <span class="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2 shadow-soft border border-brand-light text-base text-brand-teal/80"><span class="h-3 w-3 rounded-full bg-brand-teal"></span>एआई-संचालित दैनिक शिक्षा साथी</span>
+            </div>
+          </div>
+          <h1 class="text-5xl lg:text-6xl font-extrabold tracking-tight text-brand-teal leading-tight text-center">अनुकूली, एआई-संचालित शिक्षा – हर बच्चे का अधिकार</h1>
+          <p class="mt-6 text-2xl text-brand-teal/80 text-center">btrlrn सीमित इंटरनेट वाले बच्चों के लिए एआई-संचालित शिक्षा लाता है। टेलीग्राम के माध्यम से, हम शिक्षा को हल्का, डेटा-कुशल और सुलभ बनाते हैं—वेब या ऐप की आवश्यकता नहीं।</p>
+        </div>
+        <!-- Right Card: Rewards/Prizes/Scholarships (matches left card design) -->
+        <div class="bg-white/95 rounded-3xl border border-brand-light shadow-soft p-8 flex flex-col">
+          <div class="flex flex-col items-start">
+            <div class="flex flex-col items-center w-full">
+              <img src="ice-cream.png" alt="आइसक्रीम पुरस्कार चित्रण" class="w-48 h-auto md:w-56 mb-6" />
+              <div class="flex flex-wrap items-center gap-4 mb-6 justify-center">
+                <span class="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2 shadow-soft border border-brand-light text-base text-brand-teal/90 font-semibold"><span class="h-3 w-3 rounded-full bg-green-600"></span>कोई शुल्क नहीं। कोई चाल नहीं। केवल प्रगति!</span>
+                <span class="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2 shadow-soft border border-brand-light text-base text-brand-teal/80"><span class="h-3 w-3 rounded-full bg-brand-teal"></span>हर किसी के लिए अद्भुत दैनिक, साप्ताहिक और मासिक पुरस्कार</span>
+              </div>
+            </div>
+            <h2 class="text-5xl lg:text-6xl font-extrabold tracking-tight text-brand-teal leading-tight mb-2 text-center">1,000 पूरी तरह से वित्तपोषित वार्षिक छात्रवृत्तियाँ उपलब्ध!</h2>
+            <p class="mt-6 text-2xl text-brand-teal/80 text-center">btrlrn प्रगति के लिए वास्तविक पुरस्कार देता है। जितना अधिक आपका बच्चा सिलेबस-आधारित क्विज़ में जीतता है, उतना ही वे वार्षिक लीडरबोर्ड में ऊपर चढ़ते हैं और पूरी तरह से वित्तपोषित छात्रवृत्तियाँ जीतते हैं जिसमें फीस, यूनिफॉर्म और किताबें शामिल हैं।</p>
+          </div>
+        </div>
+      </div>
+      <!-- Mission Statement Card (Full Width, below hero cards) -->
+      <div class="mt-10 relative flex justify-center">
+        <div class="rounded-2xl shadow-soft border border-brand-light p-6 text-center bg-white/95 relative z-10 w-full mb-4 md:mb-6 lg:mb-8">
+          <h2 class="text-3xl font-extrabold text-brand-teal mb-2 text-center">हमारा मिशन</h2>
+          <p class="text-brand-teal text-lg font-semibold">महान शिक्षा उपकरणों को सुलभ और मुफ्त बनाना, महंगे डेटा या डिवाइस की आवश्यकता के बिना।<br> कोई शुल्क नहीं। कोई चाल नहीं। केवल अवसर।</p>
+        </div>
+        <img 
+          src="swinging.png" 
+          alt="कार्ड से झूलती लड़की" 
+          class="absolute w-32 md:w-40 lg:w-48 h-auto z-20 drop-shadow-xl pointer-events-none select-none left-0 bottom-[-3.5rem] md:bottom-[-4.5rem] lg:bottom-[-5.5rem] swing-anim"
+        />
+      </div>
+    </div>
+  </section>
+
+  <!-- QR & Why Telegram side-by-side on large screens -->
+  <div class="mt-14 grid grid-cols-1 lg:grid-cols-2 gap-10 max-w-5xl mx-auto">
+    <!-- Left: QR & Join Info (horizontal layout) -->
+    <div class="bg-white/80 rounded-3xl p-6 border border-brand-light shadow-lg flex flex-row items-center justify-center h-full max-w-xl mx-auto transition-transform hover:scale-[1.025]">
+      <img src="btrlrn_qr.png" alt="btrlrn टेलीग्राम पर जुड़ने के लिए स्कैन करें" class="w-28 h-auto rounded-xl border border-brand-light flex-shrink-0" />
+      <div class="ml-6 flex flex-col justify-center">
+        <h2 class="text-xl font-semibold">अब टेलीग्राम पर सीखना शुरू करें!</h2>
+        <p class="mt-1 text-brand-teal/80">अपने फोन के कैमरे से इस QR को स्कैन करें या बटन पर टैप करें और टेलीग्राम में btrlrn बॉट खोलें।</p>
+        <div class="mt-3">
+          <a href="https://t.me/btrlrnbot" class="inline-flex items-center justify-center rounded-full bg-brand-teal px-4 py-2 font-semibold text-white hover:opacity-90 transition text-sm">@btrlrnbot खोलें</a>
+        </div>
+      </div>
+    </div>
+    <!-- Right: Why Telegram (smaller box) -->
+    <div id="why-telegram" class="bg-brand-light/80 p-6 rounded-3xl border-2 border-brand-teal flex items-center gap-4 shadow-lg h-full max-w-xl mx-auto transition-transform hover:scale-[1.025]">
+      <span class="text-2xl">🔒</span>
+      <div>
+        <span class="block text-lg font-bold text-brand-teal">क्यों टेलीग्राम?</span>
+        <span class="block mt-1 text-base text-brand-teal font-semibold">WhatsApp के विपरीत, टेलीग्राम आपका फ़ोन नंबर तब तक साझा नहीं करता जब तक आप स्वयं न चाहें — यह अतिरिक्त गोपनीयता परत btrlrn को बच्चों के लिए और भी सुरक्षित बनाती है।</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- How it works -->
+  <section id="how-it-works" class="py-20 lg:py-28 section-animate">
+    <div class="max-w-7xl mx-auto px-6 lg:px-8">
+      <div class="relative flex justify-center items-center mb-2">
+        <span class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none opacity-20 z-0">
+          <img src="laying.png" alt="सजावटी वॉटरमार्क" class="w-64 md:w-80 lg:w-96 h-auto float-anim" />
+        </span>
+        <h2 class="text-3xl font-bold text-center relative z-10">कैसे काम करता है</h2>
+      </div>
+      <div class="mt-14 grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="bg-white/90 rounded-3xl p-8 border border-brand-light shadow-lg transition-transform hover:scale-[1.03]">
+          <div class="text-2xl font-semibold">1. ऑनबोर्ड</div>
+          <p class="mt-2 text-brand-teal/80">सरल, बच्चों के अनुकूल सेटअप: भाषा, नाम, कक्षा, और पाठ्यक्रम। माता-पिता नियंत्रण में रहते हैं।</p>
+        </div>
+        <div class="bg-white rounded-2xl p-6 border border-brand-light shadow-soft">
+          <div class="text-2xl font-semibold">2. रोज़ सीखें, अपने तरीके से</div>
+          <p class="mt-2 text-brand-teal/80">हर दिन, btrlrn की एआई आपके बच्चे की गति और ज़रूरतों के अनुसार पाठ और क्विज़ अनुकूलित करती है। कोई दबाव नहीं — बस सही चुनौती, सही समय पर, सर्वोत्तम परिणामों के लिए।</p>
+        </div>
+        <div class="bg-white rounded-2xl p-6 border border-brand-light shadow-soft">
+          <div class="text-2xl font-semibold">3. पुरस्कार</div>
+          <p class="mt-2 text-brand-teal/80">दैनिक स्ट्रीक, साप्ताहिक पुरस्कार, और छात्रवृत्तियाँ प्रेरणा को ऊँचा रखती हैं।</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- For Parents -->
+  <section id="for-parents" class="py-20 lg:py-28 bg-brand-light/60 section-animate">
+    <div class="max-w-7xl mx-auto px-6 lg:px-8">
+      <div class="relative flex justify-center items-center mb-2">
+        <span class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none opacity-20 z-0">
+          <img src="meditating.png" alt="सजावटी वॉटरमार्क" class="w-64 md:w-80 lg:w-96 h-auto float-anim" />
+        </span>
+        <h2 class="text-3xl font-bold text-center relative z-10">माता-पिता के लिए</h2>
+      </div>
+      <div class="mt-14 grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="bg-white/90 rounded-3xl p-8 border border-brand-light shadow-lg transition-transform hover:scale-[1.03]">
+          <h3 class="text-xl font-semibold">सुरक्षित और निजी</h3>
+          <p class="mt-2 text-brand-teal/80">कोई स्पैम नहीं, कोई डेटा साझा नहीं। माता-पिता के लिए स्पष्ट नियंत्रण और संपर्क विकल्प।</p>
+        </div>
+        <div class="bg-white rounded-2xl p-6 border border-brand-light shadow-soft">
+          <h3 class="text-xl font-semibold">सुलभ</h3>
+          <p class="mt-2 text-brand-teal/80">शुरू करने के लिए मुफ्त। CSR और भागीदारों द्वारा वित्तपोषित छात्रवृत्तियाँ परिवारों के लिए लागत कम करती हैं।</p>
+        </div>
+        <div class="bg-white rounded-2xl p-6 border border-brand-light shadow-soft">
+          <h3 class="text-xl font-semibold">वास्तव में अनुकूली</h3>
+          <p class="mt-2 text-brand-teal/80">हमारी एआई प्रत्येक बच्चे की ताकत और विकास के क्षेत्रों को समझती है, जिससे यात्रा हमेशा उत्साहजनक रहती है, कभी भी भारी नहीं।</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Why btrlrn -->
+  <section class="py-20 lg:py-28 section-animate">
+    <div class="max-w-7xl mx-auto px-6 lg:px-8">
+      <div class="relative flex justify-center items-center mb-2">
+        <span class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none opacity-20 z-0">
+          <img src="zombieing.png" alt="सजावटी वॉटरमार्क" class="w-64 md:w-80 lg:w-96 h-auto float-anim" />
+        </span>
+        <h2 class="text-3xl font-bold text-center relative z-10">क्यों btrlrn?</h2>
+      </div>
+      <div class="mt-14 grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="bg-white/90 rounded-3xl p-8 border border-brand-light shadow-lg transition-transform hover:scale-[1.03]">
+          <h3 class="text-xl font-semibold">एआई-संचालित और बाल-केंद्रित</h3>
+          <p class="mt-2 text-brand-teal/80">btrlrn की एआई हर पाठ और क्विज़ को आपके बच्चे की गति के अनुसार अनुकूलित करती है, जिससे शिक्षा हमेशा सहायक रहती है, कभी भी तनावपूर्ण नहीं।</p>
+        </div>
+        <div class="bg-white/90 rounded-3xl p-8 border border-brand-light shadow-lg transition-transform hover:scale-[1.03]">
+          <h3 class="text-xl font-semibold">बहुभाषी</h3>
+          <p class="mt-2 text-brand-teal/80">बच्चे उस भाषा में सीखते हैं जिसमें वे सबसे अधिक सहज हैं।</p>
+        </div>
+        <div class="bg-white/90 rounded-3xl p-8 border border-brand-light shadow-lg transition-transform hover:scale-[1.03]">
+          <h3 class="text-xl font-semibold">सक्रियता</h3>
+          <p class="mt-2 text-brand-teal/80">स्ट्रीक, बैज, और पुरस्कार शिक्षा को आनंदमय और निरंतर बनाए रखते हैं।</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonials Section -->
+  <section id="testimonials" class="py-20 lg:py-28 bg-brand-light/60 border-t border-brand-light section-animate">
+    <div class="max-w-5xl mx-auto px-4 sm:px-8">
+      <div class="relative flex justify-center items-center mb-10">
+        <span class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none opacity-20 z-0">
+          <img src="loving.png" alt="सजावटी वॉटरमार्क" class="w-64 md:w-80 lg:w-96 h-auto float-anim" />
+        </span>
+        <h2 class="text-3xl font-bold text-center relative z-10 text-brand-teal">माता-पिता क्या कहते हैं</h2>
+      </div>
+      <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+        <div class="relative bg-white rounded-3xl p-8 border-2 border-brand-light shadow-lg flex flex-col items-center text-center transition-transform hover:scale-[1.03]">
+          <div class="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-2 rounded-b-xl bg-brand-yellow"></div>
+          <p class="text-lg text-brand-teal font-semibold mt-4">“btrlrn ने मेरे बच्चे को हर दिन सीखने के लिए उत्साहित कर दिया है। अनुकूली दृष्टिकोण के कारण कभी भी दबाव महसूस नहीं होता।”</p>
+          <span class="block mt-4 text-brand-teal/70 font-medium">— प्रिया एस., पुणे</span>
+        </div>
+        <div class="relative bg-white rounded-3xl p-8 border-2 border-brand-light shadow-lg flex flex-col items-center text-center transition-transform hover:scale-[1.03]">
+          <div class="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-2 rounded-b-xl bg-brand-yellow"></div>
+          <p class="text-lg text-brand-teal font-semibold mt-4">“मुझे अच्छा लगता है कि btrlrn मुफ्त और सुरक्षित है। एआई वास्तव में मेरी बेटी की गति को समझती है।”</p>
+          <span class="block mt-4 text-brand-teal/70 font-medium">— राहुल एम., मुंबई</span>
+        </div>
+        <div class="relative bg-white rounded-3xl p-8 border-2 border-brand-light shadow-lg flex flex-col items-center text-center transition-transform hover:scale-[1.03]">
+          <div class="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-2 rounded-b-xl bg-brand-yellow"></div>
+          <p class="text-lg text-brand-teal font-semibold mt-4">“साप्ताहिक पुरस्कार और इनाम मेरे बेटे को हर दिन सीखने के लिए प्रेरित करते हैं। उसके लिए यह मजेदार है और मुझे उसे व्यस्त रखना आसान लगता है!”</p>
+          <span class="block mt-4 text-brand-teal/70 font-medium">— सुनीता डी., बेंगलुरु</span>
+        </div>
+        <div class="relative bg-white rounded-3xl p-8 border-2 border-brand-light shadow-lg flex flex-col items-center text-center transition-transform hover:scale-[1.03]">
+          <div class="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-2 rounded-b-xl bg-brand-yellow"></div>
+          <p class="text-lg text-brand-teal font-semibold mt-4">“btrlrn के इनाम मेरी बेटी को शिक्षा के प्रति उत्साहित रखते हैं। वह अपनी दैनिक स्ट्रीक का इंतजार करती है!”</p>
+          <span class="block mt-4 text-brand-teal/70 font-medium">— अमित के., हैदराबाद</span>
+        </div>
+        <div class="relative bg-white rounded-3xl p-8 border-2 border-brand-light shadow-lg flex flex-col items-center text-center transition-transform hover:scale-[1.03]">
+          <div class="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-2 rounded-b-xl bg-brand-yellow"></div>
+          <p class="text-lg text-brand-teal font-semibold mt-4">“मेरा बेटा गणित में संघर्ष करता था, लेकिन btrlrn के अनुकूली पाठों ने उसे कठिन विषयों को समझने में मदद की। उसका आत्मविश्वास बहुत बढ़ गया है।”</p>
+          <span class="block mt-4 text-brand-teal/70 font-medium">— विक्रम एस., दिल्ली</span>
+        </div>
+        <div class="relative bg-white rounded-3xl p-8 border-2 border-brand-light shadow-lg flex flex-col items-center text-center transition-transform hover:scale-[1.03]">
+          <div class="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-2 rounded-b-xl bg-brand-yellow"></div>
+          <p class="text-lg text-brand-teal font-semibold mt-4">“btrlrn ने मेरी बेटी को विज्ञान और अंग्रेजी में सुधार करने में मदद की है। पाठ आसान हैं और अब वह कठिन विषयों से डरती नहीं है।”</p>
+          <span class="block mt-4 text-brand-teal/70 font-medium">— मीना पी., चेन्नई</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQs Section -->
+  <section id="faqs" class="py-20 lg:py-28 border-t border-brand-light section-animate">
+    <div class="max-w-5xl mx-auto px-4 sm:px-8">
+      <div class="relative flex justify-center items-center mb-10">
+        <span class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none opacity-20 z-0">
+          <img src="clumsy.png" alt="सजावटी वॉटरमार्क" class="w-64 md:w-80 lg:w-96 h-auto float-anim" />
+        </span>
+        <h2 class="text-3xl font-bold text-center relative z-10 text-brand-teal">सामान्य प्रश्न</h2>
+      </div>
+      <div class="grid gap-6">
+        <details class="bg-white/90 rounded-2xl border border-brand-light shadow-soft p-6 group">
+          <summary class="font-semibold text-brand-teal text-lg cursor-pointer group-open:text-brand-yellow transition">क्या btrlrn वास्तव में मुफ्त है?</summary>
+          <p class="mt-2 text-brand-teal/80">हाँ! btrlrn सभी शिक्षार्थियों के लिए 100% मुफ्त है। कोई छुपे हुए शुल्क या चार्ज नहीं हैं।</p>
+        </details>
+        <details class="bg-white/90 rounded-2xl border border-brand-light shadow-soft p-6 group">
+          <summary class="font-semibold text-brand-teal text-lg cursor-pointer group-open:text-brand-yellow transition">btrlrn मेरे बच्चे को सुरक्षित कैसे रखता है?</summary>
+          <p class="mt-2 text-brand-teal/80">हम कभी भी आपका डेटा साझा नहीं करते, और बच्चों के फ़ोन नंबर डिफ़ॉल्ट रूप से निजी रहते हैं। माता-पिता हमेशा नियंत्रण में रहते हैं।</p>
+        </details>
+        <details class="bg-white/90 rounded-2xl border border-brand-light shadow-soft p-6 group">
+          <summary class="font-semibold text-brand-teal text-lg cursor-pointer group-open:text-brand-yellow transition">btrlrn को अलग क्या बनाता है?</summary>
+          <p class="mt-2 text-brand-teal/80">हमारी एआई प्रत्येक बच्चे की गति के अनुसार अनुकूलित करती है, जिससे शिक्षा आनंदमय और तनावमुक्त रहती है। हम आत्मविश्वास और प्रगति पर ध्यान केंद्रित करते हैं, दबाव पर नहीं।</p>
+        </details>
+        <details class="bg-white/90 rounded-2xl border border-brand-light shadow-soft p-6 group">
+          <summary class="font-semibold text-brand-teal text-lg cursor-pointer group-open:text-brand-yellow transition">क्या btrlrn मेरे बच्चे के स्कूल के लिए अनुमोदित सिलेबस का पालन करता है?</summary>
+          <p class="mt-2 text-brand-teal/80">हाँ! btrlrn की सामग्री नवीनतम CBSE, ICSE, और राज्य बोर्ड सिलेबस से मेल खाती है। हम सुनिश्चित करते हैं कि आपका बच्चा वही विषय सीखे जो उसके स्कूल के पाठ्यक्रम से मेल खाते हैं, ताकि वह हमेशा ट्रैक पर रहे।</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer id="contact" class="bg-brand-teal text-white">
+    <div class="max-w-7xl mx-auto px-6 lg:px-8 py-10 text-center">
+      <div class="flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-6">
+        <div class="flex items-center bg-white/10 rounded-full px-4 py-2 gap-2 shadow-sm">
+          <span class="font-semibold text-white">संपर्क करें:</span>
+          <a class="underline decoration-brand-yellow/60 hover:decoration-brand-yellow text-white" href="mailto:support@btrlrn.com">support@btrlrn.com</a>
+        </div>
+        <div class="flex items-center bg-white/10 rounded-full px-4 py-2 gap-2 shadow-sm">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 text-brand-yellow"><path d="M7.75 2h8.5A5.75 5.75 0 0 1 22 7.75v8.5A5.75 5.75 0 0 1 16.25 22h-8.5A5.75 5.75 0 0 1 2 16.25v-8.5A5.75 5.75 0 0 1 7.75 2zm0 1.5A4.25 4.25 0 0 0 3.5 7.75v8.5A4.25 4.25 0 0 0 7.75 20.5h8.5A4.25 4.25 0 0 0 20.5 16.25v-8.5A4.25 4.25 0 0 0 16.25 3.5zm4.25 2.25a6.25 6.25 0 1 1 0 12.5 6.25 6.25 0 0 1 0-12.5zm0 1.5a4.75 4.75 0 1 0 0 9.5 4.75 4.75 0 0 0 0-9.5zm6.25 1.25a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/></svg>
+          <a href="https://instagram.com/btrlrnbot" target="_blank" rel="noopener" class="font-semibold text-white hover:text-brand-yellow transition">@btrlrnbot</a>
+        </div>
+      </div>
+      <div class="mt-6 flex flex-col items-center gap-1 text-sm text-white/80">
+        <span class="font-semibold text-white">© 2025 Gilded Technologies Pvt Ltd</span>
+        <span>CIN: U72900PN2021PTC206389 &nbsp;|&nbsp; GSTIN: 27AAJCG4298C1ZF</span>
+        <span class="text-xs mt-1">सर्वाधिकार सुरक्षित।</span>
+        <div class="flex flex-wrap justify-center gap-4 mt-2 w-full">
+          <a href="privacy_hi.html" class="underline decoration-brand-yellow/60 hover:decoration-brand-yellow text-white">गोपनीयता नीति</a>
+          <a href="terms_hi.html" class="underline decoration-brand-yellow/60 hover:decoration-brand-yellow text-white">सेवा की शर्तें</a>
+          <a href="child-safety_hi.html" class="underline decoration-brand-yellow/60 hover:decoration-brand-yellow text-white">बाल सुरक्षा नीति</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const sections = document.querySelectorAll('.section-animate');
+      const observer = new window.IntersectionObserver((entries, obs) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            obs.unobserve(entry.target);
+          }
+        });
+      }, {
+        threshold: 0.18
+      });
+      sections.forEach(section => {
+        observer.observe(section);
+      });
+      const btn = document.getElementById('mobile-menu-btn');
+      const menu = document.getElementById('mobile-menu');
+      if (btn && menu) {
+        btn.addEventListener('click', function() {
+          menu.classList.toggle('hidden');
+        });
+        document.addEventListener('click', function(e) {
+          if (!btn.contains(e.target) && !menu.contains(e.target)) {
+            menu.classList.add('hidden');
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>

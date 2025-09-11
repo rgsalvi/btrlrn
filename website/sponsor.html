@@ -44,10 +44,6 @@
     <div class="text-center text-lg font-bold mb-2">
       <span data-i18n="sponsor_title"></span>
     </div>
-    <div class="flex justify-end max-w-7xl mx-auto px-4 pt-4">
-  <span class="px-3 py-1 rounded border border-brand-teal bg-brand-teal text-white font-semibold">English</span>
-  <a href="sponsor_hi.html" class="px-3 py-1 rounded border border-brand-teal text-brand-teal bg-white hover:bg-brand-yellow hover:text-brand-teal font-semibold transition">हिन्दी</a>
-    </div>
     <!-- Sticky Header -->
     <header class="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-brand-light shadow-sm">
         <div class="max-w-7xl mx-auto flex items-center justify-between px-6 lg:px-8 py-3">
@@ -79,6 +75,12 @@
                     <a href="index.html#contact" class="block px-6 py-3 text-brand-teal hover:bg-brand-light/60">Contact</a>
                     <a href="sponsor.html" class="block px-6 py-3 text-brand-teal hover:bg-brand-light/60">Get Involved!</a>
                 </div>
+            </div>
+            <!-- Language Switcher -->
+            <div class="flex gap-2 items-center ml-4">
+              <span class="px-3 py-1 rounded border border-brand-teal bg-brand-teal text-white font-semibold">English</span>
+              <a href="sponsor_hi.html" class="px-3 py-1 rounded border border-brand-teal text-brand-teal bg-white hover:bg-brand-yellow hover:text-brand-teal font-semibold transition">हिन्दी</a>
+              <a href="sponsor_mr.html" class="px-3 py-1 rounded border border-brand-teal text-brand-teal bg-white hover:bg-brand-yellow hover:text-brand-teal font-semibold transition">मराठी</a>
             </div>
         </div>
     </header>
@@ -256,7 +258,7 @@
           help_2: "शीर्ष शिक्षार्थियों के लिए पुरस्कार, छात्रवृत्ति या मान्यता प्रायोजित करें",
           help_3: "छात्रों के लिए पाठ्यपुस्तकें, अध्ययन सामग्री या डिजिटल सामग्री प्रदान करें",
           help_4: "जरूरतमंद शिक्षार्थियों को तकनीक, डिवाइस या इंटरनेट एक्सेस प्रदान करें",
-          help_5: "CSR पहलों, पायलट कार्यक्रमों या शैक्षिक अभियानों में सहयोग करें",
+          help_5: "CSR पहलों, पायलट कार्यक्रमों या शैक्षणिक अभियानों में सहयोग करें",
           help_6: "मार्गदर्शन, कार्यशालाओं या स्वयंसेवी अवसरों की पेशकश करें",
           form_prompt: "नीचे फॉर्म भरें और हमारी टीम आपसे जल्द संपर्क करेगी।",
           form_name: "आपका नाम",
@@ -265,6 +267,26 @@
           form_message: "संदेश",
           form_send: "संदेश भेजें",
           or_email: "या हमें सीधे <a href=\"mailto:support@btrlrn.com\" class=\"underline decoration-brand-yellow/60 hover:decoration-brand-yellow\">support@btrlrn.com</a> पर ईमेल करें"
+        }
+      },
+      mr: {
+        translation: {
+          sponsor_title: "btrlrn सह भागीदारी करा",
+          sponsor_intro: "<strong>btrlrn</strong> चा उद्देश प्रत्येक मुलासाठी उच्च-गुणवत्तेची, अनुकूली शिक्षण उपलब्ध करणे आहे. शैक्षणिक समता आणि परिणामासाठी आमच्या दृष्टिकोनाशी सहमत असलेल्या प्रायोजक आणि CSR भागीदारांचे आम्ही स्वागत करतो.",
+          how_help_title: "आपण कसे मदत करू शकता:",
+          help_1: "अविकसित समुदायांपर्यंत आमच्या पोहोचला समर्थन करा",
+          help_2: "शीर्ष शिकणाऱ्यांसाठी पुरस्कार, शिष्यवृत्ती, किंवा मान्यता प्रायोजित करा",
+          help_3: "विद्यार्थ्यांसाठी पाठ्यपुस्तके, अध्ययन सामग्री, किंवा डिजिटल सामग्री फंड करा",
+          help_4: "गरजूंना तंत्रज्ञान, उपकरणे, किंवा इंटरनेट प्रवेश प्रदान करा",
+          help_5: "CSR उपक्रम, पायलट कार्यक्रम, किंवा शैक्षणिक मोहिमांवर सहयोग करा",
+          help_6: "मार्गदर्शन, कार्यशाळा, किंवा स्वयंसेवी संधी ऑफर करा",
+          form_prompt: "खालील फॉर्म भरा आणि आमची टीम लवकरच तुमच्याशी संपर्क साधेल.",
+          form_name: "तुमचे नाव",
+          form_email: "ईमेल पत्ता",
+          form_org: "संस्था (ऐच्छिक)",
+          form_message: "संदेश",
+          form_send: "संदेश पाठवा",
+          or_email: "किंवा आम्हाला थेट ईमेल करा <a href=\"mailto:support@btrlrn.com\" class=\"underline decoration-brand-yellow/60 hover:decoration-brand-yellow\">support@btrlrn.com</a>"
         }
       }
     };
@@ -287,6 +309,9 @@
     });
     $('#lang-hi').on('click', function() {
       i18next.changeLanguage('hi', () => $('body').localize());
+    });
+    $('#lang-mr').on('click', function() {
+      i18next.changeLanguage('mr', () => $('body').localize());
     });
     </script>
 </body>

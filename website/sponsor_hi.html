@@ -179,5 +179,42 @@
             }
         });
     </script>
+    <script>
+        // Sponsor form -> backend API (Vercel function)
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('#sponsor-form-wrapper form');
+            const wrapper = document.getElementById('sponsor-form-wrapper');
+            const thankYou = document.getElementById('thank-you-message');
+            if (form) {
+                form.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    const status = document.getElementById('form-status');
+                    status.textContent = '';
+                    const name = form.name.value;
+                    const email = form.email.value;
+                    const org = form.organization.value;
+                    const message = form.message.value;
+                    const url = '/api/sponsor_contact';
+                    try {
+                        const res = await fetch(url, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ name, email, organization: org, message })
+                        });
+                        if (res.ok) {
+                            wrapper.style.display = 'none';
+                            thankYou.classList.remove('hidden');
+                        } else {
+                            status.textContent = 'माफ़ करें, संदेश भेजने में समस्या आई।';
+                            status.className = 'mt-2 text-center text-red-700 font-semibold';
+                        }
+                    } catch (err) {
+                        status.textContent = 'माफ़ करें, संदेश भेजने में समस्या आई।';
+                        status.className = 'mt-2 text-center text-red-700 font-semibold';
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>

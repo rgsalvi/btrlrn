@@ -174,12 +174,13 @@
                     const email = form.email.value;
                     const org = form.organization.value;
                     const message = form.message.value;
-                    const chatId = '8140354366';
-                    const botToken = '8374062118:AAHb0O8GN6qhKynIqTfpmonM3TXTodGWf4k';
-                    const text = `नवीन प्रायोजक/CSR चौकशी:%0Aनाव: ${name}%0Aईमेल: ${email}%0Aसंस्था: ${org || '-'}%0Aसंदेश: ${message}`;
-                    const url = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${text}`;
+                    const url = '/api/sponsor_contact';
                     try {
-                        const res = await fetch(url);
+                        const res = await fetch(url, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ name, email, organization: org, message })
+                        });
                         if (res.ok) {
                             wrapper.style.display = 'none';
                             thankYou.classList.remove('hidden');

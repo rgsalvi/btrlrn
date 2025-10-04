@@ -616,6 +616,31 @@ async def admin_stats_handler(update, context):
         )
     return
 
+async def whereami_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    # Admin-only command to show where the bot is running
+    if not (update.effective_user and update.effective_user.id in ADMIN_IDS):
+        if getattr(update, 'message', None):
+            return await update.message.reply_text("Not authorized.")
+        return
+    import platform
+    host = platform.node()
+    py = sys.version.split()[0]
+    envs = []
+    for key in ("VERCEL_ENV", "VERCEL_URL", "VERCEL_REGION"):
+        val = os.environ.get(key)
+        if val:
+            envs.append(f"{key}={val}")
+    lines = [
+        "Source check:",
+        "mode=polling",  # This script uses run_polling() when executed as __main__
+        f"host={host}",
+        f"python={py}",
+        ("env: " + ", ".join(envs)) if envs else "env: none"
+    ]
+    if getattr(update, 'message', None):
+        return await update.message.reply_text("\n".join(lines))
+    return
+
 async def help_cmd(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
     wa_id = uid_from_tg(update)
@@ -1560,6 +1585,7 @@ if __name__ == "__main__":
     app.add_handler(CommandHandler("start", start_cmd))
     app.add_handler(CommandHandler("adminstats", admin_stats_handler))
     app.add_handler(CommandHandler("help", help_cmd))
+    app.add_handler(CommandHandler("whereami", whereami_cmd))
     app.add_handler(CommandHandler("quiz", quiz_cmd))
     app.add_handler(CommandHandler("subject", subject_cmd))
     app.add_handler(CommandHandler("profile", profile_cmd))

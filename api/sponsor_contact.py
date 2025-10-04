@@ -31,6 +31,8 @@ class handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         try:
+            # Basic invocation log to Vercel function logs
+            print("[sponsor_contact] POST invoked")
             length = int(self.headers.get('Content-Length') or 0)
             raw = self.rfile.read(length) if length > 0 else b''
             ctype = (self.headers.get('Content-Type') or '').lower()
@@ -61,6 +63,21 @@ class handler(BaseHTTPRequestHandler):
                 return
 
             # Build Telegram message
+            # Include deployment metadata to confirm source is Vercel
+            vercel_env = os.environ.get('VERCEL_ENV')  # production | preview | development
+            vercel_url = os.environ.get('VERCEL_URL')  # <deployment>.vercel.app
+            vercel_region = os.environ.get('VERCEL_REGION')
+            host = self.headers.get('host')
+            x_vercel_id = self.headers.get('x-vercel-id')
+
+            meta_parts = []
+            if vercel_env: meta_parts.append(f"env={vercel_env}")
+            if vercel_url: meta_parts.append(f"url={vercel_url}")
+            if vercel_region: meta_parts.append(f"region={vercel_region}")
+            if host: meta_parts.append(f"host={host}")
+            if x_vercel_id: meta_parts.append(f"id={x_vercel_id}")
+            meta_line = urllib.parse.quote("; ".join(meta_parts)) if meta_parts else ""
+
             text = (
                 f"New Sponsor/CSR Inquiry:%0A"
                 f"Name: {urllib.parse.quote(name)}%0A"
@@ -68,6 +85,8 @@ class handler(BaseHTTPRequestHandler):
                 f"Organization: {urllib.parse.quote(organization or '-')}%0A"
                 f"Message: {urllib.parse.quote(message)}"
             )
+            if meta_line:
+                text += f"%0A---%0ASource: {meta_line}"
             url = f"https://api.telegram.org/bot{bot_token}/sendMessage?chat_id={chat_id}&text={text}"
 
             req = urllib.request.Request(url, method='GET')
